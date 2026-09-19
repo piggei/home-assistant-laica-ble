@@ -142,6 +142,19 @@ def parse_manufacturer_data(
     return parse_payload(bytes(payload))
 
 
+def is_supported_discovery_data(manufacturer_data: Mapping[int, bytes]) -> bool:
+    """Return whether an advertisement identifies a YoHealth scale.
+
+    Discovery intentionally validates only the BLE company identifier and public
+    YoHealth header. Measurement parsing remains strict and still requires the
+    complete payload, terminator, and checksum.
+    """
+    payload = manufacturer_data.get(YOHEALTH_COMPANY_ID)
+    if payload is None:
+        return False
+    return bytes(payload).startswith(HEADER)
+
+
 def is_supported_manufacturer_data(manufacturer_data: Mapping[int, bytes]) -> bool:
     """Return whether an advertisement contains a valid YoHealth frame."""
     return parse_manufacturer_data(manufacturer_data) is not None

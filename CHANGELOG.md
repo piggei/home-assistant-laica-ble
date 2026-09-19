@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-dev.9 - 2026-09-20
+
+Discovery hardening based on the validated `0.1.0-dev.8` baseline.
+
+- Automatic and manual discovery now identify YoHealth devices from Company ID
+  `0xA102` plus the public `09 FF` header only.
+- Measurement parsing remains unchanged and still requires the complete payload,
+  terminator, and valid checksum before any measurement is accepted.
+- Added regression tests proving that discovery can accept an identifying partial
+  advertisement while the measurement parser rejects it as incomplete.
+- No changes to session handling, `0x80`/`0x82`/`0x86` behavior, entities, profile
+  handling, or recovered YoHealth body-composition formulas.
+
 ## 0.1.0-dev.8 - 2026-09-19
 
 Weight-only measurement support based on direct PS7002 footwear testing.

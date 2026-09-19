@@ -32,7 +32,7 @@ from .const import (
     SEX_MALE,
 )
 from .profile import parse_birth_date
-from .protocol import is_supported_manufacturer_data
+from .protocol import is_supported_discovery_data
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,7 +144,7 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle automatic Bluetooth discovery."""
-        if not is_supported_manufacturer_data(discovery_info.manufacturer_data):
+        if not is_supported_discovery_data(discovery_info.manufacturer_data):
             return self.async_abort(reason="not_supported")
 
         await self.async_set_unique_id(discovery_info.address)
@@ -172,7 +172,7 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         for info in async_discovered_service_info(self.hass, False):
             if info.address in configured or info.address in self._discovered:
                 continue
-            if is_supported_manufacturer_data(info.manufacturer_data):
+            if is_supported_discovery_data(info.manufacturer_data):
                 self._discovered[info.address] = Discovery(_device_title(info), info)
 
         if not self._discovered:

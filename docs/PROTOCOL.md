@@ -34,6 +34,12 @@ The Home Assistant manifest therefore matches:
 }
 ```
 
+Discovery deliberately stops at this public identity check: Company ID `0xA102`
+plus payload prefix `09 FF`. A discovery advertisement does **not** need to be a
+complete measurement frame. After configuration, measurement processing remains
+strict and accepts only complete 12-byte payloads with the expected terminator and
+a valid checksum.
+
 ## Payload layout
 
 ```text
@@ -83,12 +89,14 @@ Observed PS7002 transitions include:
 - `0x82`: stable weight/no-body-composition candidate;
 - `0x86`: final body-composition result.
 
-For v0.1.x, Home Assistant publishes **only `0x86`**. `0x80` and `0x82` are used
-only to re-arm duplicate suppression for the next weighing.
+Home Assistant never publishes `0x80`. A stable `0x82` frame is held for 2.5
+seconds as a weight-only candidate. If a complete `0x86` frame arrives during that
+window, the `0x86` result wins and the pending `0x82` update is cancelled. If the
+scale stops at `0x82` (for example when electrode contact is unavailable), only
+body weight is published and the existing BIA-derived entities are left unchanged.
 
-If future captures show `0x86` with `FFFF` impedance (for example socks/no
-contact), the current implementation safely publishes only the final weight.
-If the scale instead stops at `0x82`, no entity is updated in v0.1.x by design.
+A valid `0x86` frame with unavailable impedance is likewise safe: body weight can
+be published without recalculating body-composition metrics.
 
 ## Checksum
 

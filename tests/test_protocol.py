@@ -17,6 +17,19 @@ def test_reference_frame() -> None:
     assert protocol.calculate_checksum(REFERENCE) == 0x15
 
 
+def test_discovery_accepts_header_without_complete_measurement() -> None:
+    manufacturer_data = {protocol.YOHEALTH_COMPANY_ID: bytes.fromhex("09 FF")}
+    assert protocol.is_supported_discovery_data(manufacturer_data)
+    assert protocol.parse_manufacturer_data(manufacturer_data) is None
+
+
+def test_discovery_rejects_wrong_company_or_header() -> None:
+    assert not protocol.is_supported_discovery_data({0xFFFF: bytes.fromhex("09 FF")})
+    assert not protocol.is_supported_discovery_data(
+        {protocol.YOHEALTH_COMPANY_ID: bytes.fromhex("09 FE")}
+    )
+
+
 def test_bad_checksum_is_rejected() -> None:
     payload = bytearray(REFERENCE)
     payload[10] ^= 0x01
