@@ -14,7 +14,7 @@ body:
     id: integration_version
     attributes:
       label: LAICA BLE version / commit
-      placeholder: "0.1.0-dev.7"
+      placeholder: "0.1.0-dev.8"
     validations:
       required: true
   - type: input

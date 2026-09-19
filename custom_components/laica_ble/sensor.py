@@ -160,12 +160,13 @@ def measurement_to_bluetooth_update(
         entity_data[entity_key] = value
         entity_descriptions[entity_key] = SENSOR_DESCRIPTIONS[key]
 
-    # A final 0x86 frame always publishes the final weight.
+    # Every accepted measurement publishes weight: immediately for 0x86, or
+    # after the short hold-off for a stable 0x82 weight-only session.
     add(KEY_WEIGHT, update.frame.weight_kg)
 
-    # If a final frame has no impedance (e.g. a future confirmed socks/no-BIA
-    # case), only weight is updated. Existing body-composition entities retain
-    # their last valid measurement instead of being overwritten with nonsense.
+    # Body-composition values are published only from a full 0x86 frame with
+    # usable impedance. A deferred 0x82 measurement updates weight only; existing
+    # BIA-derived entities retain their last valid values.
     if update.frame.impedance is not None and update.metrics is not None:
         metrics = update.metrics
         # Publish the user-facing body-composition values in the same logical

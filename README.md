@@ -3,7 +3,7 @@
 Experimental local Bluetooth integration for LAICA smart body-composition scales
 using the **YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.7**
+Current release: **0.1.0-dev.8**
 
 The integration was developed and directly validated with a **LAICA PS7002**.
 Compatibility with other LAICA/YoHealth models is an explicit research goal, but
@@ -19,8 +19,8 @@ The integration:
 
 1. discovers compatible YoHealth advertisements;
 2. validates the protocol header, terminator and checksum;
-3. **only accepts final status `0x86`** in this first release;
-4. decodes final weight and, when present, impedance;
+3. accepts complete status `0x86`, or a deferred stable `0x82` as weight-only;
+4. decodes weight and, for complete measurements, impedance;
 5. calculates the recovered YoHealth body-composition fields locally from the
    configured profile;
 6. retains the last measurement while the scale is sleeping/offline.
@@ -40,9 +40,10 @@ The integration:
 | Body age | recovered YoHealth algorithm |
 | Basal metabolic rate | recovered YoHealth algorithm |
 
-Body-composition sensors are created after the first final frame containing a
-valid impedance value. If a final `0x86` frame is received without impedance,
-only weight is updated and previous body-composition values are retained.
+Body-composition sensors are created after the first final `0x86` frame containing
+a valid impedance value. A stable `0x82` measurement is accepted as weight-only
+after a short hold-off. Likewise, if a final `0x86` frame has no usable impedance,
+only weight is updated. Previous body-composition values are retained.
 
 ## Important architectural limitation: one person per scale entry
 
@@ -61,16 +62,21 @@ composition belongs to the configured profile only.
 The date of birth and profile values stay in the local Home Assistant config
 entry and are not sent anywhere by this integration.
 
-## Conservative final-frame policy
+## Measurement-state policy
 
-PS7002 captures showed states including `0x80`, `0x82` and `0x86`. To avoid
-publishing realtime or partially settled values, **v0.1.x deliberately ignores
-`0x80` and `0x82` for entity updates**. They are observed only to identify a new
-weighing session.
+PS7002 captures show `0x80` while measurement is in progress, `0x82` when the
+weight is stable, and `0x86` for a complete body-composition result. Real-world
+testing with footwear confirmed that a valid stable weight can stop at `0x82`
+when electrode contact is unavailable.
 
-A future release may optionally accept `0x82` for weight-only measurements after
-we have captured and documented behavior with socks/shoes or failed electrode
-contact.
+The integration therefore holds the first stable `0x82` candidate for **2.5
+seconds**. If `0x86` arrives during that window, the pending `0x82` is cancelled
+and only the complete measurement is published. If no `0x86` arrives, the stable
+`0x82` weight is published once as a weight-only measurement. `0x80` never updates
+entities and re-arms the next weighing session.
+
+Body-composition entities are never recalculated from `0x82`; they keep their
+last valid `0x86` values.
 
 ## Installation
 

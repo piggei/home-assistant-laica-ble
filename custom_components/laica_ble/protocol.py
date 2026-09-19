@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from .const import (
     FINAL_REARM_TIMEOUT_SECONDS,
     FINAL_STATUS,
+    REALTIME_STATUS,
+    STABLE_WEIGHT_STATUS,
     YOHEALTH_COMPANY_ID,
 )
 
@@ -143,6 +145,53 @@ def parse_manufacturer_data(
 def is_supported_manufacturer_data(manufacturer_data: Mapping[int, bytes]) -> bool:
     """Return whether an advertisement contains a valid YoHealth frame."""
     return parse_manufacturer_data(manufacturer_data) is not None
+
+
+class StableWeightGate:
+    """Track one deferred 0x82 weight-only candidate per weighing session."""
+
+    def __init__(self) -> None:
+        self._pending = False
+        self._emitted = False
+
+    @property
+    def pending(self) -> bool:
+        """Return whether a stable weight-only candidate is pending."""
+        return self._pending
+
+    def observe(self, frame: YoHealthFrame) -> bool:
+        """Return True when a new 0x82 candidate should be scheduled.
+
+        0x80 starts/re-arms a weighing session. A full 0x86 frame cancels any
+        pending weight-only candidate and prevents a later 0x82 duplicate from
+        being emitted in the same session.
+        """
+        if frame.status == REALTIME_STATUS:
+            self._pending = False
+            self._emitted = False
+            return False
+
+        if frame.status == FINAL_STATUS:
+            self._pending = False
+            self._emitted = True
+            return False
+
+        if frame.status != STABLE_WEIGHT_STATUS:
+            return False
+
+        if self._pending or self._emitted:
+            return False
+
+        self._pending = True
+        return True
+
+    def accept_pending(self) -> bool:
+        """Consume the pending 0x82 candidate exactly once."""
+        if not self._pending or self._emitted:
+            return False
+        self._pending = False
+        self._emitted = True
+        return True
 
 
 class FinalMeasurementGate:

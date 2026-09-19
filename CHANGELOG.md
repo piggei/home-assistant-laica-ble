@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-dev.8 - 2026-09-19
+
+Weight-only measurement support based on direct PS7002 footwear testing.
+
+- Accept stable status `0x82` as a weight-only measurement after a 2.5 second hold-off.
+- Give complete `0x86` measurements priority and cancel a pending `0x82` candidate.
+- Keep `0x80` as an in-progress state that never updates entities.
+- Suppress repeated `0x82` advertisements so one weighing produces one weight-only update.
+- Never calculate or overwrite BIA-derived metrics from a `0x82` measurement.
+- Added regression tests for `0x82` hold/cancel/re-arm session behavior.
+- Extended privacy-safe diagnostics with stable-weight counters and policy metadata.
+- No changes to the recovered YoHealth calculation formulas.
+
 ## 0.1.0-dev.7 - 2026-09-19
 
 CI/quality cleanup release following the first full validation run.

@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address = entry.unique_id
     assert address is not None
 
-    device_data = LaicaBluetoothDeviceData(_profile_from_entry(entry))
+    device_data = LaicaBluetoothDeviceData(hass, _profile_from_entry(entry))
 
     coordinator: PassiveBluetoothProcessorCoordinator[
         LaicaMeasurementUpdate | None
@@ -58,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connectable=False,
     )
 
+    device_data.set_delayed_publisher(coordinator.async_set_updated_data)
+
     entry.runtime_data = LaicaRuntimeData(
         coordinator=coordinator,
         device_data=device_data,
@@ -65,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Start listening only after entity platforms registered their processors.
+    entry.async_on_unload(device_data.stop)
     entry.async_on_unload(coordinator.async_start())
     return True
 

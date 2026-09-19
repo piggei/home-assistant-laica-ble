@@ -15,6 +15,8 @@ from .const import (
     CONF_SEX,
     FINAL_STATUS,
     PROTOCOL_NAME,
+    STABLE_WEIGHT_DELAY_SECONDS,
+    STABLE_WEIGHT_STATUS,
     YOHEALTH_COMPANY_ID,
 )
 
@@ -46,7 +48,9 @@ async def async_get_config_entry_diagnostics(
             "protocol": PROTOCOL_NAME,
             "company_id": f"0x{YOHEALTH_COMPANY_ID:04X}",
             "accepted_final_status": f"0x{FINAL_STATUS:02X}",
-            "policy": "final_0x86_only",
+            "accepted_stable_weight_status": f"0x{STABLE_WEIGHT_STATUS:02X}",
+            "stable_weight_delay_seconds": STABLE_WEIGHT_DELAY_SECONDS,
+            "policy": "0x86_complete_or_deferred_0x82_weight_only",
         },
         "bluetooth": runtime.device_data.diagnostics(),
     }

@@ -52,3 +52,56 @@ def test_gate_suppresses_duplicate_and_rearms() -> None:
     assert realtime is not None
     assert not gate.accept(realtime, now=102.0)
     assert gate.accept(final, now=103.0)
+
+
+def test_stable_weight_gate_prefers_final_frame() -> None:
+    stable_bytes = bytearray(REFERENCE)
+    stable_bytes[4:6] = b"\xff\xff"
+    stable_bytes[6] = 0x82
+    stable_bytes[10] = (
+        sum(protocol.COMPANY_ID_LE_BYTES) + sum(stable_bytes[:10])
+    ) & 0xFF
+    stable = protocol.parse_payload(bytes(stable_bytes))
+    final = protocol.parse_payload(REFERENCE)
+    assert stable is not None
+    assert final is not None
+
+    gate = protocol.StableWeightGate()
+    assert gate.observe(stable)
+    assert gate.pending
+    assert not gate.observe(stable)
+
+    # A complete 0x86 frame cancels the pending 0x82 candidate.
+    assert not gate.observe(final)
+    assert not gate.pending
+    assert not gate.accept_pending()
+
+
+def test_stable_weight_gate_emits_once_and_rearms_on_realtime() -> None:
+    stable_bytes = bytearray(REFERENCE)
+    stable_bytes[4:6] = b"\xff\xff"
+    stable_bytes[6] = 0x82
+    stable_bytes[10] = (
+        sum(protocol.COMPANY_ID_LE_BYTES) + sum(stable_bytes[:10])
+    ) & 0xFF
+    stable = protocol.parse_payload(bytes(stable_bytes))
+
+    realtime_bytes = bytearray(stable_bytes)
+    realtime_bytes[6] = 0x80
+    realtime_bytes[10] = (
+        sum(protocol.COMPANY_ID_LE_BYTES) + sum(realtime_bytes[:10])
+    ) & 0xFF
+    realtime = protocol.parse_payload(bytes(realtime_bytes))
+    assert stable is not None
+    assert realtime is not None
+
+    gate = protocol.StableWeightGate()
+    assert gate.observe(stable)
+    assert gate.accept_pending()
+    assert not gate.accept_pending()
+    assert not gate.observe(stable)
+
+    # A new 0x80 session allows the next stable weight to be emitted.
+    assert not gate.observe(realtime)
+    assert gate.observe(stable)
+    assert gate.accept_pending()

@@ -61,6 +61,23 @@ assert realtime is not None
 assert not gate.accept(realtime, now=102.0)
 assert gate.accept(frame, now=103.0)
 
+# Stable 0x82 weight-only candidate is held once and cancelled by 0x86.
+stable_payload = bytearray(payload)
+stable_payload[4:6] = bytes.fromhex("FF FF")
+stable_payload[6] = 0x82
+stable_payload[10] = (
+    sum(protocol.COMPANY_ID_LE_BYTES) + sum(stable_payload[:10])
+) & 0xFF
+stable = protocol.parse_payload(bytes(stable_payload))
+assert stable is not None
+stable_gate = protocol.StableWeightGate()
+assert stable_gate.observe(stable)
+assert stable_gate.pending
+assert not stable_gate.observe(stable)
+assert not stable_gate.observe(frame)
+assert not stable_gate.pending
+assert not stable_gate.accept_pending()
+
 
 # A final 0x86 frame without usable impedance is still a final weight.
 no_bia = bytearray(payload)
@@ -100,4 +117,4 @@ assert metrics.bmr_kcal_per_day == 1673
 assert algorithm.age_on_date(date(1970, 12, 10), date(2026, 9, 19)) == 55
 assert algorithm.age_on_date(date(1970, 12, 10), date(2026, 12, 10)) == 56
 
-print("PASS: protocol, final-frame gate, profile age, and YoHealth algorithm")
+print("PASS: protocol, session gates, profile age, and YoHealth algorithm")

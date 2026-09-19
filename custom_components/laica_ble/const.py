@@ -23,10 +23,14 @@ PROTOCOL_NAME: Final = "YoHealth"
 # Bleak represents the integer key as little-endian 0xA102.
 YOHEALTH_COMPANY_ID: Final = 0xA102
 
-# Current conservative policy: only a final 0x86 frame can publish a weighing.
-# 0x80/0x82 frames are still parsed so they can re-arm the session gate, but they
-# never update Home Assistant entities in this first integration release.
+# Observed YoHealth measurement states on PS7002.
+REALTIME_STATUS: Final = 0x80
+STABLE_WEIGHT_STATUS: Final = 0x82
 FINAL_STATUS: Final = 0x86
+
+# Hold a stable weight-only frame briefly to give a full 0x86 body-composition
+# frame priority when bare-foot electrode contact is available.
+STABLE_WEIGHT_DELAY_SECONDS: Final = 2.5
 
 # If a final frame is repeated continuously, emit it once. The parser is re-armed
 # by any non-0x86 protocol frame. The timeout is a safety net if transition frames
