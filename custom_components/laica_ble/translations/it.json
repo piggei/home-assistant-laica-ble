@@ -58,36 +58,38 @@
       }
     }
   },
-  "sensor": {
-    "bmi": {
-      "name": "BMI"
-    },
-    "body_age": {
-      "name": "Età corporea"
-    },
-    "body_fat": {
-      "name": "Grasso corporeo"
-    },
-    "body_water": {
-      "name": "Acqua corporea"
-    },
-    "bone_mass": {
-      "name": "Massa ossea"
-    },
-    "bmr": {
-      "name": "Metabolismo basale"
-    },
-    "impedance": {
-      "name": "Impedenza"
-    },
-    "muscle": {
-      "name": "Massa muscolare"
-    },
-    "visceral_fat": {
-      "name": "Grasso viscerale"
-    },
-    "weight": {
-      "name": "Peso"
+  "entity": {
+    "sensor": {
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_age": {
+        "name": "Età corporea"
+      },
+      "body_fat": {
+        "name": "Grasso corporeo"
+      },
+      "body_water": {
+        "name": "Acqua corporea"
+      },
+      "bone_mass": {
+        "name": "Massa ossea"
+      },
+      "bmr": {
+        "name": "Metabolismo basale"
+      },
+      "impedance": {
+        "name": "Impedenza"
+      },
+      "muscle": {
+        "name": "Massa muscolare"
+      },
+      "visceral_fat": {
+        "name": "Grasso viscerale"
+      },
+      "body_weight": {
+        "name": "Peso corporeo"
+      }
     }
   }
 }

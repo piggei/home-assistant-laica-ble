@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-dev.4
+
+- Fixed Home Assistant entity translations to use the current `entity.sensor` schema.
+- Renamed the main scale measurement from generic `Weight` to `Body weight` (`Peso corporeo`).
+- Bone mass now has its own explicit translated name instead of falling back to the generic weight device-class label.
+- Improved body-composition entity labels (`Muscle mass`, etc.).
+- No protocol or YoHealth calculation changes.
+
 ## 0.1.0-dev.3 - 2026-09-19
 
 - Replaced the Home Assistant calendar date selector with a text field accepting `DD/MM/YYYY` and `YYYY-MM-DD`.

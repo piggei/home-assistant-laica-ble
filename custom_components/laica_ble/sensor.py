@@ -41,7 +41,7 @@ KEY_BMR = "bmr"
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     KEY_WEIGHT: SensorEntityDescription(
         key=KEY_WEIGHT,
-        translation_key=KEY_WEIGHT,
+        translation_key="body_weight",
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,

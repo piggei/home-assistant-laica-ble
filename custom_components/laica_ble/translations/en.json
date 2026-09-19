@@ -58,36 +58,38 @@
       }
     }
   },
-  "sensor": {
-    "bmi": {
-      "name": "BMI"
-    },
-    "body_age": {
-      "name": "Body age"
-    },
-    "body_fat": {
-      "name": "Body fat"
-    },
-    "body_water": {
-      "name": "Body water"
-    },
-    "bone_mass": {
-      "name": "Bone mass"
-    },
-    "bmr": {
-      "name": "Basal metabolic rate"
-    },
-    "impedance": {
-      "name": "Impedance"
-    },
-    "muscle": {
-      "name": "Muscle"
-    },
-    "visceral_fat": {
-      "name": "Visceral fat"
-    },
-    "weight": {
-      "name": "Weight"
+  "entity": {
+    "sensor": {
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_age": {
+        "name": "Body age"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "body_water": {
+        "name": "Body water"
+      },
+      "bone_mass": {
+        "name": "Bone mass"
+      },
+      "bmr": {
+        "name": "Basal metabolic rate"
+      },
+      "impedance": {
+        "name": "Impedance"
+      },
+      "muscle": {
+        "name": "Muscle mass"
+      },
+      "visceral_fat": {
+        "name": "Visceral fat"
+      },
+      "body_weight": {
+        "name": "Body weight"
+      }
     }
   }
 }
