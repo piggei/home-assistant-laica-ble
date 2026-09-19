@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.1-build2 - 2026-09-20
+
+Internal discovery diagnostic build; not intended as a public HACS release.
+
+- Fixed custom-integration runtime localization by using only
+  `translations/en.json` and `translations/it.json`; removed Core-only
+  `strings.json`.
+- Added translated field descriptions to the manual scan confirmation control.
+- Manual discovery now keeps Home Assistant scanners in ACTIVE mode for the full
+  15-second wait window.
+- During that window every non-connectable BLE advertisement is logged at DEBUG.
+- YoHealth-like advertisements are also logged at INFO, together with a final scan
+  summary, so useful diagnostics are available with the normal Home Assistant log
+  level.
+- Discovery logs remain privacy-reduced: only name/address, company IDs, payload
+  lengths and the first two payload bytes are reported. Weight/impedance payload
+  contents and profile data are not logged.
+- No changes to measurement parsing, `0x80`/`0x82`/`0x86` handling, entities, or
+  recovered YoHealth formulas.
+
 ## 0.1.1-build1 - 2026-09-19
 
 Internal discovery diagnostic build; not intended as a public HACS release.

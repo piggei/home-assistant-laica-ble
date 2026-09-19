@@ -1,4 +1,5 @@
 {
+  "title": "LAICA BLE",
   "config": {
     "abort": {
       "already_configured": "Questa bilancia è già configurata.",
@@ -35,6 +36,9 @@
         "description": "Sali sulla bilancia e avvia una pesata. Attiva l’opzione qui sotto e premi Invia: Home Assistant cercherà per circa 15 secondi un advertising LAICA/YoHealth compatibile.",
         "data": {
           "scan_now": "Bilancia attiva: cerca adesso"
+        },
+        "data_description": {
+          "scan_now": "Attiva la bilancia iniziando una pesata, quindi invia questo modulo mentre il display è acceso."
         }
       }
     }

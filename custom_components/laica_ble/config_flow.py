@@ -135,13 +135,6 @@ def _log_candidate(info: BluetoothServiceInfoBleak, source: str) -> None:
     )
 
 
-def _manual_scan_match(info: BluetoothServiceInfoBleak) -> bool:
-    """Log relevant live advertisements and accept a YoHealth discovery signature."""
-    if _is_debug_candidate(info):
-        _log_candidate(info, "live-observed")
-    return is_discovery_manufacturer_data(info.manufacturer_data)
-
-
 def _profile_errors(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate profile fields that selectors cannot fully validate."""
     errors: dict[str, str] = {}
@@ -259,31 +252,72 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            _LOGGER.debug("Starting manual LAICA BLE scan/wait window")
+            _LOGGER.info(
+                "Starting manual LAICA BLE scan/wait window (%.1f seconds)",
+                SCAN_TIMEOUT_SECONDS,
+            )
 
             # First perform Home Assistant's official one-shot active sweep, then
             # inspect the shared cache. This helps AUTO-mode local/proxy scanners.
             await bluetooth.async_request_active_scan(self.hass)
             self._refresh_discovered()
             if self._discovered:
+                _LOGGER.info(
+                    "Manual LAICA BLE scan found %d compatible scale(s) in cache",
+                    len(self._discovered),
+                )
                 return self._show_device_picker()
 
-            # If the scale wakes after the one-shot sweep, wait for a live
-            # advertisement. Match only the company ID here and apply our own
-            # header predicate so transient measurement frames can still identify
-            # the scale while runtime measurements remain strictly validated.
+            # Log every non-connectable advertisement at DEBUG during this short
+            # diagnostic window. Relevant YoHealth-like advertisements are also
+            # logged at INFO so they are visible with Home Assistant's normal log
+            # level. Only company IDs, lengths and two payload-prefix bytes are
+            # logged; measurement payload contents are deliberately omitted.
+            seen_packets = 0
+            seen_addresses: set[str] = set()
+
+            def _scan_match(info: BluetoothServiceInfoBleak) -> bool:
+                nonlocal seen_packets
+                seen_packets += 1
+                seen_addresses.add(info.address)
+                _LOGGER.debug(
+                    "LAICA BLE scan advertisement: name=%s address=%s "
+                    "connectable=%s mfg=[%s]",
+                    info.name,
+                    info.address,
+                    info.connectable,
+                    _manufacturer_summary(info),
+                )
+                if _is_debug_candidate(info):
+                    _LOGGER.info(
+                        "LAICA BLE relevant advertisement: name=%s address=%s "
+                        "connectable=%s mfg=[%s]",
+                        info.name,
+                        info.address,
+                        info.connectable,
+                        _manufacturer_summary(info),
+                    )
+                return is_discovery_manufacturer_data(info.manufacturer_data)
+
+            # Keep AUTO-mode scanners active for the whole wait window. An active
+            # scan still receives ordinary non-scannable advertisements such as
+            # those emitted by the PS7002.
             try:
                 info = await bluetooth.async_process_advertisements(
                     self.hass,
-                    _manual_scan_match,
+                    _scan_match,
                     {"connectable": False},
-                    BluetoothScanningMode.PASSIVE,
+                    BluetoothScanningMode.ACTIVE,
                     SCAN_TIMEOUT_SECONDS,
                 )
             except TimeoutError:
-                _LOGGER.debug(
-                    "Manual LAICA BLE scan timed out after %.1f seconds",
+                _LOGGER.info(
+                    "Manual LAICA BLE scan timed out after %.1f seconds: "
+                    "%d advertisement(s) from %d unique address(es), no "
+                    "compatible YoHealth signature",
                     SCAN_TIMEOUT_SECONDS,
+                    seen_packets,
+                    len(seen_addresses),
                 )
                 self._refresh_discovered()
                 if self._discovered:
@@ -291,6 +325,13 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_devices_found"
             else:
                 _log_candidate(info, "live-manual-scan")
+                _LOGGER.info(
+                    "Manual LAICA BLE scan matched a compatible advertisement "
+                    "after observing %d advertisement(s) from %d unique "
+                    "address(es)",
+                    seen_packets,
+                    len(seen_addresses),
+                )
                 configured = self._async_current_ids(include_ignore=False)
                 if info.address not in configured:
                     self._discovered[info.address] = Discovery(

@@ -1,4 +1,5 @@
 {
+  "title": "LAICA BLE",
   "config": {
     "abort": {
       "already_configured": "This scale is already configured.",
@@ -35,6 +36,9 @@
         "description": "Step on the scale and start a weighing. Enable the option below and press Submit: Home Assistant will wait for about 15 seconds for a compatible LAICA/YoHealth advertisement.",
         "data": {
           "scan_now": "Scale is active: search now"
+        },
+        "data_description": {
+          "scan_now": "Turn the scale on by starting a weighing, then submit this form while the display is active."
         }
       }
     }

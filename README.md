@@ -3,9 +3,9 @@
 Local Bluetooth integration for LAICA smart body-composition scales using the
 **YoHealth** advertising protocol.
 
-Current development build: **0.1.1-build1**
+Current development build: **0.1.1-build2**
 
-> `0.1.1-build1` is an internal discovery-test build. The latest public stable
+> `0.1.1-build2` is an internal discovery-test build. The latest public stable
 > release remains `0.1.1`; the next public release will be `0.1.2` after this
 > discovery path is validated.
 
@@ -131,7 +131,7 @@ Installation procedure:
    model.
 
 If the automatic discovery card does not appear, choose **Add integration ->
-LAICA BLE**. In `0.1.1-build1` the fallback screen contains an explicit **Scale
+LAICA BLE**. In `0.1.1-build2` the fallback screen contains an explicit translated **Scale
 is active: search now** control. Start a weighing, enable that control and submit
 the form. Home Assistant first performs a one-shot scan, checks the shared BLE
 cache, then waits up to 15 seconds for a live compatible advertisement. This path
@@ -172,7 +172,7 @@ LAICA/YoHealth scales advertise only while they are awake, so discovery depends
 on receiving a BLE advertisement during a weighing. Automatic Bluetooth discovery
 remains the normal setup path.
 
-The `0.1.1-build1` discovery path deliberately separates *device identification*
+The `0.1.1-build2` discovery path deliberately separates *device identification*
 from *measurement validation*. Setup identifies a candidate using only the
 YoHealth Company ID (`0xA102`) and header (`09 FF`). This is intentionally less
 strict than the runtime parser because the first packet observed while the scale
@@ -238,7 +238,7 @@ calculation.
 | Other LAICA/YoHealth models | unknown | unknown | reports wanted |
 
 The PS7002 is the only model directly validated with this Home Assistant
-integration through stable release `0.1.1`; `0.1.1-build1` changes only setup discovery. Do not assume compatibility solely from the LAICA
+integration through stable release `0.1.1`; `0.1.1-build2` changes only setup discovery and diagnostics. Do not assume compatibility solely from the LAICA
 brand or product appearance.
 
 ## Support and issue routing
@@ -276,9 +276,18 @@ logger:
     custom_components.laica_ble: debug
 ```
 
-For `0.1.1-build1`, discovery DEBUG messages also report the BLE device name and
-address plus manufacturer company IDs, payload lengths and only the first two
-payload bytes. The remainder of the manufacturer payload is deliberately omitted
+After installing a development build, restart Home Assistant and refresh the
+browser UI. If a config-flow label still appears as a raw key such as
+`scan_now`, force-refresh the browser (`Ctrl+F5` on Windows/Linux). Custom
+integration runtime strings are supplied directly from
+`custom_components/laica_ble/translations/`; this build intentionally does not
+ship a Core-only `strings.json` file.
+
+For `0.1.1-build2`, the 15-second manual search logs every non-connectable BLE
+advertisement at DEBUG. YoHealth-like candidates and the scan summary are also
+reported at INFO, so useful evidence remains visible even without DEBUG logging.
+The logged metadata includes the BLE device name/address, manufacturer company
+IDs, payload lengths and only the first two payload bytes. The remainder of the manufacturer payload is deliberately omitted
 so weight and impedance data are not written to the discovery log. The integration
 does not log the configured date of birth or other profile details.
 
@@ -297,9 +306,10 @@ GitHub Actions run Ruff, pytest, the standalone self-test, Python compilation,
 JSON validation, Home Assistant `hassfest`, and HACS repository validation on
 pushes and pull requests.
 
-Build `0.1.1-build1` preserves the validated measurement parser, `0x80` / `0x82` /
+Build `0.1.1-build2` preserves the validated measurement parser, `0x80` / `0x82` /
 `0x86` state behavior and recovered YoHealth formulas. It changes only the
-identification/waiting path used during setup and adds discovery diagnostics.
+identification/waiting path used during setup, fixes custom-integration runtime
+translations, and expands discovery diagnostics.
 
 ## Safety / interpretation
 
