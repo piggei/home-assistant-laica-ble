@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, override
 
 import voluptuous as vol
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
@@ -31,9 +33,15 @@ from .const import (
     DOMAIN,
     SEX_FEMALE,
     SEX_MALE,
+    YOHEALTH_COMPANY_ID,
 )
 from .profile import parse_birth_date
-from .protocol import is_supported_manufacturer_data
+from .protocol import is_discovery_manufacturer_data
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_TIMEOUT_SECONDS = 15.0
+SCAN_CONFIRM = "scan_now"
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,7 +103,43 @@ def _profile_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
+def _manufacturer_summary(info: BluetoothServiceInfoBleak) -> str:
+    """Return privacy-reduced manufacturer metadata for debug logging."""
+    parts: list[str] = []
+    for company_id, payload in info.manufacturer_data.items():
+        raw = bytes(payload)
+        prefix = raw[:2].hex(" ").upper() if raw else "<empty>"
+        parts.append(f"0x{company_id:04X}:len={len(raw)} prefix={prefix}")
+    return ", ".join(parts) if parts else "<none>"
 
+
+def _is_debug_candidate(info: BluetoothServiceInfoBleak) -> bool:
+    """Return whether a BLE advertisement is relevant to discovery debugging."""
+    name = (info.name or "").lower()
+    return (
+        "yohealth" in name
+        or YOHEALTH_COMPANY_ID in info.manufacturer_data
+        or 0x02A1 in info.manufacturer_data
+    )
+
+
+def _log_candidate(info: BluetoothServiceInfoBleak, source: str) -> None:
+    """Log enough BLE metadata to diagnose discovery without logging weight data."""
+    _LOGGER.debug(
+        "LAICA BLE %s candidate: name=%s address=%s connectable=%s mfg=[%s]",
+        source,
+        info.name,
+        info.address,
+        info.connectable,
+        _manufacturer_summary(info),
+    )
+
+
+def _manual_scan_match(info: BluetoothServiceInfoBleak) -> bool:
+    """Log relevant live advertisements and accept a YoHealth discovery signature."""
+    if _is_debug_candidate(info):
+        _log_candidate(info, "live-observed")
+    return is_discovery_manufacturer_data(info.manufacturer_data)
 
 
 def _profile_errors(user_input: dict[str, Any]) -> dict[str, str]:
@@ -145,9 +189,18 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle automatic Bluetooth discovery."""
-        if not is_supported_manufacturer_data(discovery_info.manufacturer_data):
+        _log_candidate(discovery_info, "automatic-discovery")
+        if not is_discovery_manufacturer_data(discovery_info.manufacturer_data):
+            _LOGGER.debug(
+                "Ignoring Bluetooth discovery for %s: "
+                "YoHealth Company ID/header not present",
+                discovery_info.address,
+            )
             return self.async_abort(reason="not_supported")
 
+        # Do not require a complete/checksum-valid measurement for setup. The first
+        # advertisement seen while the scale wakes can be transient. Measurement
+        # parsing remains strict once the integration is configured.
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
@@ -158,10 +211,14 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def _refresh_discovered(self) -> None:
         """Refresh supported scales from Home Assistant's Bluetooth cache."""
         configured = self._async_current_ids(include_ignore=False)
-        for info in async_discovered_service_info(self.hass, False):
+        cached = async_discovered_service_info(self.hass, False)
+        _LOGGER.debug("Manual discovery cache contains %d BLE devices", len(cached))
+        for info in cached:
+            if _is_debug_candidate(info):
+                _log_candidate(info, "cached-observed")
             if info.address in configured or info.address in self._discovered:
                 continue
-            if is_supported_manufacturer_data(info.manufacturer_data):
+            if is_discovery_manufacturer_data(info.manufacturer_data):
                 self._discovered[info.address] = Discovery(_device_title(info), info)
 
     def _show_device_picker(self) -> ConfigFlowResult:
@@ -198,19 +255,59 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Wait for a scale advertisement and allow retry without aborting setup."""
+        """Wait for a live scale advertisement and allow retry without aborting."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            _LOGGER.debug("Starting manual LAICA BLE scan/wait window")
+
+            # First perform Home Assistant's official one-shot active sweep, then
+            # inspect the shared cache. This helps AUTO-mode local/proxy scanners.
             await bluetooth.async_request_active_scan(self.hass)
             self._refresh_discovered()
             if self._discovered:
                 return self._show_device_picker()
-            errors["base"] = "no_devices_found"
+
+            # If the scale wakes after the one-shot sweep, wait for a live
+            # advertisement. Match only the company ID here and apply our own
+            # header predicate so transient measurement frames can still identify
+            # the scale while runtime measurements remain strictly validated.
+            try:
+                info = await bluetooth.async_process_advertisements(
+                    self.hass,
+                    _manual_scan_match,
+                    {"connectable": False},
+                    BluetoothScanningMode.PASSIVE,
+                    SCAN_TIMEOUT_SECONDS,
+                )
+            except TimeoutError:
+                _LOGGER.debug(
+                    "Manual LAICA BLE scan timed out after %.1f seconds",
+                    SCAN_TIMEOUT_SECONDS,
+                )
+                self._refresh_discovered()
+                if self._discovered:
+                    return self._show_device_picker()
+                errors["base"] = "no_devices_found"
+            else:
+                _log_candidate(info, "live-manual-scan")
+                configured = self._async_current_ids(include_ignore=False)
+                if info.address not in configured:
+                    self._discovered[info.address] = Discovery(
+                        _device_title(info), info
+                    )
+                    return self._show_device_picker()
+                errors["base"] = "already_configured"
 
         return self.async_show_form(
             step_id="scan",
-            data_schema=vol.Schema({}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        SCAN_CONFIRM, default=True
+                    ): selector.BooleanSelector(),
+                }
+            ),
             errors=errors,
         )
 

@@ -105,3 +105,15 @@ def test_stable_weight_gate_emits_once_and_rearms_on_realtime() -> None:
     assert not gate.observe(realtime)
     assert gate.observe(stable)
     assert gate.accept_pending()
+
+
+def test_discovery_signature_accepts_transient_frame() -> None:
+    transient = bytes.fromhex("09 FF 01")
+    manufacturer_data = {0xA102: transient}
+    assert protocol.is_discovery_manufacturer_data(manufacturer_data)
+    assert protocol.parse_manufacturer_data(manufacturer_data) is None
+
+
+def test_discovery_signature_rejects_wrong_company_or_header() -> None:
+    assert not protocol.is_discovery_manufacturer_data({0x1234: REFERENCE})
+    assert not protocol.is_discovery_manufacturer_data({0xA102: b"\x08\xff"})

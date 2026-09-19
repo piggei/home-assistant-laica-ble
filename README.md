@@ -3,7 +3,11 @@
 Local Bluetooth integration for LAICA smart body-composition scales using the
 **YoHealth** advertising protocol.
 
-Current release: **0.1.1**
+Current development build: **0.1.1-build1**
+
+> `0.1.1-build1` is an internal discovery-test build. The latest public stable
+> release remains `0.1.1`; the next public release will be `0.1.2` after this
+> discovery path is validated.
 
 The integration has been developed and directly validated with a **LAICA
 PS7002**. Compatibility with other LAICA/YoHealth models must be confirmed model
@@ -127,9 +131,11 @@ Installation procedure:
    model.
 
 If the automatic discovery card does not appear, choose **Add integration ->
-LAICA BLE**. The integration now provides a retryable scan step: wake the scale
-by starting a weighing, then continue the scan while the scale is advertising.
-This path does not require restarting Home Assistant.
+LAICA BLE**. In `0.1.1-build1` the fallback screen contains an explicit **Scale
+is active: search now** control. Start a weighing, enable that control and submit
+the form. Home Assistant first performs a one-shot scan, checks the shared BLE
+cache, then waits up to 15 seconds for a live compatible advertisement. This path
+does not require pairing or a connection to the scale.
 
 No YAML configuration is required.
 
@@ -154,9 +160,10 @@ https://github.com/piggei/home-assistant-laica-ble/releases
    discovered **LAICA BLE** device.
 
 If the device is not shown automatically, use **Add integration -> LAICA BLE**.
-The setup flow first checks Home Assistant's Bluetooth cache; if no compatible
-scale is present, it shows a scan/retry screen. Start a weighing, keep the scale
-awake and continue the scan.
+The setup flow first checks Home Assistant's Bluetooth cache. If no compatible
+scale is present, it shows a visible search control. Start a weighing, select
+**Scale is active: search now**, and submit; the flow waits up to 15 seconds for
+a live advertisement.
 
 
 ## Discovery, removal and reinstallation
@@ -165,19 +172,26 @@ LAICA/YoHealth scales advertise only while they are awake, so discovery depends
 on receiving a BLE advertisement during a weighing. Automatic Bluetooth discovery
 remains the normal setup path.
 
-Release `0.1.1` also hardens the lifecycle around removal and fresh setup:
+The `0.1.1-build1` discovery path deliberately separates *device identification*
+from *measurement validation*. Setup identifies a candidate using only the
+YoHealth Company ID (`0xA102`) and header (`09 FF`). This is intentionally less
+strict than the runtime parser because the first packet observed while the scale
+wakes may be transient or incomplete. Actual measurements are still accepted only
+after the full protocol length, terminator and checksum checks succeed.
 
-- removing a LAICA BLE config entry asks Home Assistant to rediscover the stored
-  Bluetooth address immediately, using the official Bluetooth rediscovery API;
-- **Add integration -> LAICA BLE** no longer aborts when no scale is already in
-  the Bluetooth cache; it offers a retryable scan step instead;
-- the manual scan requests a one-shot active sweep from Home Assistant and then
-  rechecks compatible cached advertisements;
+The lifecycle behavior is therefore:
+
+- automatic Bluetooth discovery can start from any advertisement carrying the
+  correct Company ID/header;
+- removing a config entry asks Home Assistant to rediscover the stored address;
+- **Add integration -> LAICA BLE** first checks the shared Bluetooth cache;
+- if nothing is cached, the explicit search action performs a one-shot scan and
+  then waits up to 15 seconds for a live compatible advertisement;
 - no pairing or connection to the scale is performed.
 
-If a scale is not found, start a weighing first, keep it awake for a few seconds,
-and run the scan again. Bluetooth proxies can also provide the advertisement as
-long as Home Assistant receives it.
+If a scale is not found, start a weighing first and submit the search while the
+scale is awake. Bluetooth proxies can also provide the advertisement as long as
+Home Assistant receives it.
 
 ## Configuration and profile changes
 
@@ -224,7 +238,7 @@ calculation.
 | Other LAICA/YoHealth models | unknown | unknown | reports wanted |
 
 The PS7002 is the only model directly validated with this Home Assistant
-integration at release `0.1.1`. Do not assume compatibility solely from the LAICA
+integration through stable release `0.1.1`; `0.1.1-build1` changes only setup discovery. Do not assume compatibility solely from the LAICA
 brand or product appearance.
 
 ## Support and issue routing
@@ -262,8 +276,11 @@ logger:
     custom_components.laica_ble: debug
 ```
 
-The integration logs accepted measurement metadata, not the configured date of
-birth or other profile details.
+For `0.1.1-build1`, discovery DEBUG messages also report the BLE device name and
+address plus manufacturer company IDs, payload lengths and only the first two
+payload bytes. The remainder of the manufacturer payload is deliberately omitted
+so weight and impedance data are not written to the discovery log. The integration
+does not log the configured date of birth or other profile details.
 
 ## Validation
 
@@ -280,9 +297,9 @@ GitHub Actions run Ruff, pytest, the standalone self-test, Python compilation,
 JSON validation, Home Assistant `hassfest`, and HACS repository validation on
 pushes and pull requests.
 
-Release `0.1.1` preserves the validated BLE protocol behavior and recovered
-YoHealth formulas from `0.1.0`; it changes only setup/discovery lifecycle handling
-and related documentation.
+Build `0.1.1-build1` preserves the validated measurement parser, `0x80` / `0x82` /
+`0x86` state behavior and recovered YoHealth formulas. It changes only the
+identification/waiting path used during setup and adds discovery diagnostics.
 
 ## Safety / interpretation
 

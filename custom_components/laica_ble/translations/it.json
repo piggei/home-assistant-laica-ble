@@ -31,8 +31,11 @@
         }
       },
       "scan": {
-        "title": "Trova una bilancia LAICA BLE",
-        "description": "Sali sulla bilancia per attivarla e avviare una pesata. Mentre sta trasmettendo, continua per cercare un dispositivo LAICA/YoHealth compatibile."
+        "title": "Cerca la bilancia LAICA BLE",
+        "description": "Sali sulla bilancia e avvia una pesata. Attiva l’opzione qui sotto e premi Invia: Home Assistant cercherà per circa 15 secondi un advertising LAICA/YoHealth compatibile.",
+        "data": {
+          "scan_now": "Bilancia attiva: cerca adesso"
+        }
       }
     }
   },

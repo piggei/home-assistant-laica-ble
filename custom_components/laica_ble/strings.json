@@ -31,8 +31,11 @@
         }
       },
       "scan": {
-        "title": "Find a LAICA BLE scale",
-        "description": "Step on the scale to wake it and start a weighing. While it is advertising, continue to scan for a compatible LAICA/YoHealth device."
+        "title": "Search for the LAICA BLE scale",
+        "description": "Step on the scale and start a weighing. Enable the option below and press Submit: Home Assistant will wait for about 15 seconds for a compatible LAICA/YoHealth advertisement.",
+        "data": {
+          "scan_now": "Scale is active: search now"
+        }
       }
     }
   },

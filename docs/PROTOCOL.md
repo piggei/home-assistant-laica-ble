@@ -151,3 +151,16 @@ Compatibility work, new captures, and protocol questions belong in the technical
 research repository:
 
 https://github.com/piggei/laica-ps7002-ble-research
+
+## Discovery matching versus measurement validation
+
+Home Assistant setup and runtime parsing intentionally use different validation
+levels. Discovery needs only Company ID `0xA102` and the leading YoHealth bytes
+`09 FF`; the remaining advertisement may still be transient while the scale wakes.
+Once configured, measurement decoding remains strict and requires the complete
+12-byte post-company payload, `AA` terminator and valid checksum before any frame
+is allowed to update entities.
+
+This separation prevents an early transient advertisement from consuming a Home
+Assistant Bluetooth discovery opportunity while preserving the protocol integrity
+checks for actual weight/body-composition data.

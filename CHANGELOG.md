@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.1-build1 - 2026-09-19
+
+Internal discovery diagnostic build; not intended as a public HACS release.
+
+- Split setup discovery matching from strict measurement validation: configuration
+  now identifies a YoHealth scale from Company ID `0xA102` plus header `09 FF`,
+  while runtime measurement frames still require full length, terminator and
+  checksum validation.
+- This avoids aborting Bluetooth discovery when the first advertisement seen while
+  the scale wakes is transient or incomplete.
+- Reworked the manual setup fallback into an explicit user-visible search action.
+- Manual search performs Home Assistant's one-shot scan, checks the shared cache,
+  and then waits up to 15 seconds for a live compatible advertisement.
+- Added privacy-reduced DEBUG discovery logging (device name/address, company ID,
+  payload length and two-byte prefix only; no weight/impedance payload bytes).
+- Added regression tests proving that transient YoHealth advertisements are valid
+  for discovery but are still rejected as measurements.
+- No changes to measurement state handling or recovered YoHealth formulas.
+
 ## 0.1.1 - 2026-09-19
 
 Discovery/reinstallation reliability release.

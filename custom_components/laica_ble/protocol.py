@@ -142,6 +142,21 @@ def parse_manufacturer_data(
     return parse_payload(bytes(payload))
 
 
+def is_discovery_manufacturer_data(manufacturer_data: Mapping[int, bytes]) -> bool:
+    """Return whether an advertisement identifies a YoHealth-compatible scale.
+
+    Discovery intentionally uses only the public Company ID and protocol header.
+    A scale can advertise transient/incomplete frames while waking; requiring a
+    fully checksum-valid measurement here can cause Home Assistant to consume the
+    Bluetooth discovery match and then abort the flow before a final frame arrives.
+    Runtime measurements remain strictly validated by ``parse_manufacturer_data``.
+    """
+    payload = manufacturer_data.get(YOHEALTH_COMPANY_ID)
+    if payload is None:
+        return False
+    return bytes(payload).startswith(HEADER)
+
+
 def is_supported_manufacturer_data(manufacturer_data: Mapping[int, bytes]) -> bool:
     """Return whether an advertisement contains a valid YoHealth frame."""
     return parse_manufacturer_data(manufacturer_data) is not None
