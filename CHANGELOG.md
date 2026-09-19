@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.0 - 2026-09-20
+
+First stable release, promoted without runtime changes from the validated
+`0.1.0-dev.10` baseline.
+
+Validated on a real **LAICA PS7002** with a clean Home Assistant installation:
+
+- automatic Bluetooth discovery from YoHealth Company ID `0xA102` / prefix `09 FF`;
+- first-session weight-only discovery and measurement from stable `0x82` when
+  electrode contact is unavailable;
+- later full `0x86` measurement correctly adds/updates BIA-derived entities;
+- complete barefoot measurement path with weight, impedance and recovered
+  YoHealth body-composition metrics;
+- profile configuration and profile editing;
+- Body age disabled by default;
+- removal and Bluetooth rediscovery of the same scale;
+- no duplicate physical scale device after a clean remove/reinstall cycle.
+
+Release preparation changes are metadata/documentation only: manifest version,
+release wording, issue-template version, changelog, and packaging cleanup. The
+Python runtime implementation is unchanged from `0.1.0-dev.10`.
+
 ## 0.1.0-dev.10 - 2026-09-20
 
 Lifecycle hardening based on clean remove/reinstall testing of `0.1.0-dev.9`.

@@ -1,9 +1,9 @@
 # LAICA BLE for Home Assistant
 
-Experimental local Bluetooth integration for LAICA smart body-composition scales
-using the **YoHealth** advertising protocol.
+Local Bluetooth integration for LAICA smart body-composition scales using the
+**YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.10**
+Current release: **0.1.0**
 
 The integration was developed and directly validated with a **LAICA PS7002**.
 Compatibility with other LAICA/YoHealth models is an explicit research goal, but
@@ -80,7 +80,7 @@ last valid `0x86` values.
 
 ## Installation
 
-### HACS (recommended for development installs)
+### HACS (recommended)
 
 The repository is structured as a HACS custom integration. To install it from
 GitHub without copying files manually:
@@ -96,8 +96,8 @@ GitHub without copying files manually:
 8. Open the discovery card and enter the local profile values and scale model.
 
 The repository contains `hacs.json` and the HACS brand assets required for a
-custom integration repository. Development builds used for HACS testing are
-published as explicit GitHub Releases so the installed version is unambiguous.
+custom integration repository. Published GitHub Releases are the supported HACS
+installation source.
 
 ### Manual
 
@@ -194,9 +194,13 @@ Body-composition values from consumer BIA scales are estimates. This project
 reproduces the historical vendor algorithm for interoperability and research; it
 is not intended for diagnosis or medical decision-making.
 
-## Development status
+## Release status
 
-This consolidation build keeps the validated BLE/parser/algorithm behavior unchanged and adds diagnostics, regression tests and repository validation before the first stable `0.1.0` release. Automatic discovery, profile editing and real PS7002 measurements have been verified in Home Assistant.
+Version **0.1.0** is the first stable release. The runtime is frozen from the
+validated `0.1.0-dev.10` baseline. Fresh-install testing on a real PS7002 verified
+automatic discovery, profile setup/editing, weight-only operation when electrode
+contact is unavailable, later promotion to full BIA measurements, removal and
+rediscovery, and the default-disabled Body age entity.
 
 ## License and provenance
 
