@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import time
-from typing import Mapping
+from collections.abc import Mapping
+from dataclasses import dataclass
 
 from .const import (
     FINAL_REARM_TIMEOUT_SECONDS,

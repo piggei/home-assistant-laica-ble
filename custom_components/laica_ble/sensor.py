@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SCALE_MODEL, MANUFACTURER, PROTOCOL_NAME
+from .const import CONF_SCALE_MODEL, MANUFACTURER
 from .device import LaicaMeasurementUpdate
 
 OHM = "Ω"

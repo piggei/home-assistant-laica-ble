@@ -1,0 +1,81 @@
+hassfest	Run home-assistant/actions/hassfest@master	﻿2026-09-19T19:39:32.8269666Z ##[group]Run home-assistant/actions/hassfest@master
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8271291Z ##[endgroup]
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8371139Z ##[start-action display=Run echo "::add-matcher::/home/runner/work/_actions/home-assistant/actions/master/hassfest/problem-matcher.json";id=__home-assistant_actions.__run]
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8451448Z ##[group]Run echo "::add-matcher::/home/runner/work/_actions/home-assistant/actions/master/hassfest/problem-matcher.json"
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8455154Z [36;1mecho "::add-matcher::/home/runner/work/_actions/home-assistant/actions/master/hassfest/problem-matcher.json"[0m
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8498924Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8500667Z ##[endgroup]
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8618350Z ##[end-action id=__home-assistant_actions.__run;outcome=success;conclusion=success;duration_ms=24]
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8631380Z ##[start-action display=Run docker run --rm -v /home/runner/work/home-assistant-laica-ble/home-assistant-laica-ble://github/workspace ghcr.io/home-assistant/hassfest;id=__home-assistant_actions.__run_2]
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8680091Z ##[group]Run docker run --rm -v /home/runner/work/home-assistant-laica-ble/home-assistant-laica-ble://github/workspace ghcr.io/home-assistant/hassfest
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8684800Z [36;1mdocker run --rm -v /home/runner/work/home-assistant-laica-ble/home-assistant-laica-ble://github/workspace ghcr.io/home-assistant/hassfest[0m
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8721287Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.8722815Z ##[endgroup]
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:32.9535683Z Unable to find image 'ghcr.io/home-assistant/hassfest:latest' locally
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4160092Z latest: Pulling from home-assistant/hassfest
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4164763Z 6a0ac1617861: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4165165Z bafef4f1a46c: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4165493Z 97f1e103f334: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4169014Z ffe5e153acbf: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4169912Z 6c1f1fbb7e41: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4170569Z 9d0248e33b6d: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4171173Z 7358b6d6cb43: Pulling fs layer
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4171736Z ffe5e153acbf: Waiting
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4172437Z 6c1f1fbb7e41: Waiting
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4173031Z 9d0248e33b6d: Waiting
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.4173456Z 7358b6d6cb43: Waiting
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.6198294Z bafef4f1a46c: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.6199008Z bafef4f1a46c: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.6357900Z 6a0ac1617861: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.6358405Z 6a0ac1617861: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7178128Z 97f1e103f334: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7178985Z 97f1e103f334: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7680161Z ffe5e153acbf: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7681029Z ffe5e153acbf: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7682320Z 6a0ac1617861: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7839940Z 6c1f1fbb7e41: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:33.7841727Z 6c1f1fbb7e41: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:34.0545789Z 9d0248e33b6d: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:34.0547032Z 9d0248e33b6d: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:34.3813073Z 7358b6d6cb43: Verifying Checksum
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:34.3813627Z 7358b6d6cb43: Download complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:36.7504023Z bafef4f1a46c: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:37.3770466Z 97f1e103f334: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:37.3898484Z ffe5e153acbf: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:37.3991520Z 6c1f1fbb7e41: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:41.2790924Z 9d0248e33b6d: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:45.2964368Z 7358b6d6cb43: Pull complete
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:45.2995659Z Digest: sha256:66b55a8ce14cdcf0c200dd4dab1f3228ac8d3f6e0404ec710a0d8a79b296eba4
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:45.3094177Z Status: Downloaded newer image for ghcr.io/home-assistant/hassfest:latest
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.3767282Z Validating application_credentials... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.3792437Z Validating bluetooth... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.3801942Z Validating codeowners... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.3802598Z Validating conditions... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.3805172Z Validating config_schema... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8125607Z Validating dependencies... done in 0.43s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8154451Z Validating dhcp... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8155281Z Validating icons... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8155950Z Validating integration_info... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8156782Z Validating integration_type... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8164902Z Validating json... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8190482Z Validating labs... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8220605Z Validating manifest... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8230931Z Validating mqtt... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8231721Z Validating quality_scale... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8232339Z Validating requirements... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8250526Z Validating services... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8285246Z Validating ssdp... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8334081Z Validating translations... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8338330Z Validating triggers... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8371615Z Validating usb... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8405419Z Validating zeroconf... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8436428Z Validating config_flow... done in 0.00s
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8436818Z 
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8436957Z Integrations: 1
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8437275Z Invalid integrations: 1
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8437523Z 
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8437852Z Integration laica_ble - /github/workspace/custom_components/laica_ble:
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8461543Z ##[error]* [ERROR] [MANIFEST] Manifest keys are not sorted correctly: domain, name, then alphabetical order
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:50.8462304Z 
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:51.1882828Z ##[error]Process completed with exit code 1.
+hassfest	Run home-assistant/actions/hassfest@master	2026-09-19T19:39:51.1892310Z ##[end-action id=__home-assistant_actions.__run_2;outcome=failure;conclusion=failure;duration_ms=18325]

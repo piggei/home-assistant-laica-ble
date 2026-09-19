@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-
 ACCEPTED_BIRTH_DATE_FORMATS = ("%d/%m/%Y", "%Y-%m-%d")
 
 

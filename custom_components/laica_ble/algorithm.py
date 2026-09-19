@@ -12,9 +12,9 @@ used for diagnosis or treatment decisions.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import date
-import math
 
 from .const import SEX_FEMALE, SEX_MALE
 

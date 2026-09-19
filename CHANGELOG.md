@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-dev.7 - 2026-09-19
+
+CI/quality cleanup release following the first full validation run.
+
+- Fixed Ruff import ordering and removed unused imports.
+- Updated `Mapping` to import from `collections.abc`.
+- Fixed the remaining Ruff line-length violation.
+- Reordered `manifest.json` keys to satisfy Home Assistant `hassfest`.
+- No BLE protocol, entity behavior, final-frame policy, profile handling, or YoHealth formula changes.
+
 ## 0.1.0-dev.6
 
 Consolidation release before `0.1.0`.

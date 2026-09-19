@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import date
-import logging
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.util import dt as dt_util
@@ -91,7 +91,9 @@ class LaicaBluetoothDeviceData:
                 f"0x{self._last_status:02X}" if self._last_status is not None else None
             ),
             "last_mode": (
-                f"0x{self._last_mode_raw:02X}" if self._last_mode_raw is not None else None
+                f"0x{self._last_mode_raw:02X}"
+                if self._last_mode_raw is not None
+                else None
             ),
             "last_frame_had_impedance": self._last_has_impedance,
             "accepted_final_measurements": self._accepted_final_count,
