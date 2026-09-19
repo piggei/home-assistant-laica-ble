@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Any, override
 
 import voluptuous as vol
@@ -70,7 +70,11 @@ def _profile_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
-            birth_date_key: selector.DateSelector(),
+            birth_date_key: selector.TextSelector(
+                selector.TextSelectorConfig(
+                    type=selector.TextSelectorType.TEXT,
+                )
+            ),
             vol.Required(
                 CONF_HEIGHT_CM,
                 default=defaults.get(CONF_HEIGHT_CM, 175.0),
@@ -91,12 +95,23 @@ def _profile_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
+
+
+def _parse_birth_date(value: str) -> date | None:
+    """Parse a birth date accepted by the UI and normalize it later to ISO."""
+    raw = value.strip()
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(raw, fmt).date()
+        except ValueError:
+            continue
+    return None
+
 def _profile_errors(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate profile fields that selectors cannot fully validate."""
     errors: dict[str, str] = {}
-    try:
-        birth_date = date.fromisoformat(str(user_input[CONF_BIRTH_DATE]))
-    except ValueError:
+    birth_date = _parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
+    if birth_date is None:
         errors[CONF_BIRTH_DATE] = "invalid_birth_date"
         return errors
 
@@ -194,12 +209,14 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 model = str(user_input[CONF_SCALE_MODEL]).strip()
                 title = model if model.lower().startswith("laica") else f"LAICA {model}"
+                birth_date = _parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
+                assert birth_date is not None
                 return self.async_create_entry(
                     title=title,
                     data={CONF_ADDRESS: self._discovery.info.address},
                     options={
                         CONF_SEX: user_input[CONF_SEX],
-                        CONF_BIRTH_DATE: str(user_input[CONF_BIRTH_DATE]),
+                        CONF_BIRTH_DATE: birth_date.isoformat(),
                         CONF_HEIGHT_CM: float(user_input[CONF_HEIGHT_CM]),
                         CONF_SCALE_MODEL: model,
                     },
@@ -230,11 +247,13 @@ class LaicaBleOptionsFlow(OptionsFlowWithReload):
                     self.config_entry,
                     title=title,
                 )
+                birth_date = _parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
+                assert birth_date is not None
                 return self.async_create_entry(
                     title="",
                     data={
                         CONF_SEX: user_input[CONF_SEX],
-                        CONF_BIRTH_DATE: str(user_input[CONF_BIRTH_DATE]),
+                        CONF_BIRTH_DATE: birth_date.isoformat(),
                         CONF_HEIGHT_CM: float(user_input[CONF_HEIGHT_CM]),
                         CONF_SCALE_MODEL: model,
                     },

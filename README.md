@@ -3,7 +3,7 @@
 Experimental local Bluetooth integration for LAICA smart body-composition scales
 using the **YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.2**
+Current release: **0.1.0-dev.3**
 
 The integration was developed and directly validated with a **LAICA PS7002**.
 Compatibility with other LAICA/YoHealth models is an explicit research goal, but
@@ -85,10 +85,9 @@ GitHub without copying files manually:
 4. Add the repository, open **LAICA BLE**, and choose **Download**.
 5. Restart Home Assistant when HACS requests it.
 6. Start a weighing so that the scale advertises over BLE.
-7. Go to **Settings -> Devices & services**. Home Assistant should discover
-   **LAICA BLE** automatically; alternatively choose **Add integration -> LAICA BLE**
-   while the scale is advertising.
-8. Enter the local profile values and the scale model.
+7. Go to **Settings -> Devices & services**. When the scale advertises, Home Assistant
+   should automatically show the discovered **LAICA BLE** device.
+8. Open the discovery card and enter the local profile values and scale model.
 
 The repository contains `hacs.json` and the HACS brand assets required for a
 custom integration repository. If no GitHub Release exists yet, HACS can install
@@ -106,18 +105,19 @@ versions explicitly.
 2. Restart Home Assistant.
 3. Make sure Home Assistant has a working Bluetooth adapter or Bluetooth proxy.
 4. Start a weighing so the scale begins advertising.
-5. Home Assistant should discover **LAICA BLE** automatically. Alternatively go
-   to **Settings -> Devices & services -> Add integration -> LAICA BLE** while
-   the scale is advertising.
-6. Enter the local profile values and the scale model.
+5. When the scale advertises, Home Assistant should automatically discover
+   **LAICA BLE** under **Settings -> Devices & services**.
+6. Open the discovery card and enter the local profile values and scale model.
 
 No YAML configuration is required.
 
 ## Profile changes
 
 Use **Settings -> Devices & services -> LAICA BLE -> Configure** to update date
-of birth, height, sex branch or model. The integration reloads automatically.
-Age is calculated from the date of birth at measurement time.
+of birth, height, sex branch or model. The date of birth can be typed as
+`DD/MM/YYYY` or `YYYY-MM-DD`; it is stored internally in ISO format. The integration
+reloads automatically, and age is calculated from the date of birth at measurement
+time.
 
 ## Protocol at a glance
 
@@ -146,7 +146,12 @@ See [docs/PROTOCOL.md](docs/PROTOCOL.md) and
 | LAICA PS7200L | historical YoHealth evidence | historical implementation source | strong evidence, needs new HA test |
 | Other LAICA models | unknown | unknown | reports wanted |
 
-Please use the GitHub issue forms for additional models and comparison samples.
+For support of additional LAICA/YoHealth devices, protocol captures, algorithm
+validation, and compatibility reports, use the dedicated research repository:
+
+https://github.com/piggei/laica-ps7002-ble-research
+
+Issues in this repository should focus on the Home Assistant integration itself.
 
 ## Safety / interpretation
 
@@ -156,22 +161,15 @@ is not intended for diagnosis or medical decision-making.
 
 ## Development status
 
-This first custom-integration build targets current Home Assistant Bluetooth
-processor/config-flow APIs. It is intentionally a development release: the next
-step is live validation on a real Home Assistant installation with the PS7002.
+This development build targets current Home Assistant Bluetooth processor/config-flow
+APIs. Automatic discovery has been verified with a real PS7002; measurement and entity
+behavior remain under active live validation.
 
 ## License and provenance
 
 Project code and original documentation are released under the **MIT License**.
 No proprietary LAICA/YoHealth library, APK, or decompiled source is distributed
 in this repository. See [NOTICE.md](NOTICE.md).
-
-### Repository URL note
-
-This development archive assumes the repository name
-`piggei/home-assistant-laica-ble` in `manifest.json`. If you choose a different
-GitHub repository name, change only the `documentation` and `issue_tracker` URLs
-in `custom_components/laica_ble/manifest.json` before publishing.
 
 ### Debug logging
 

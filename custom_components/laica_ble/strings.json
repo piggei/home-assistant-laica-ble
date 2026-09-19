@@ -7,7 +7,7 @@
     },
     "error": {
       "birth_date_in_future": "The date of birth cannot be in the future.",
-      "invalid_birth_date": "Enter a valid date of birth.",
+      "invalid_birth_date": "Enter a valid date of birth as DD/MM/YYYY or YYYY-MM-DD.",
       "model_required": "Enter the scale model."
     },
     "flow_title": "{name}",
@@ -16,7 +16,7 @@
         "title": "Configure LAICA BLE",
         "description": "Configure the local profile used to calculate body composition for {name}. The scale itself does not transmit a person/profile identifier, so one Home Assistant config entry can calculate body composition for one person only.",
         "data": {
-          "birth_date": "Date of birth",
+          "birth_date": "Date of birth (DD/MM/YYYY or YYYY-MM-DD)",
           "height_cm": "Height",
           "scale_model": "Scale model",
           "sex": "Sex used by the LAICA profile"
@@ -34,7 +34,7 @@
   "options": {
     "error": {
       "birth_date_in_future": "The date of birth cannot be in the future.",
-      "invalid_birth_date": "Enter a valid date of birth.",
+      "invalid_birth_date": "Enter a valid date of birth as DD/MM/YYYY or YYYY-MM-DD.",
       "model_required": "Enter the scale model."
     },
     "step": {
@@ -42,7 +42,7 @@
         "title": "LAICA BLE profile",
         "description": "These values are stored locally and are used only to reproduce the recovered YoHealth body-composition calculations.",
         "data": {
-          "birth_date": "Date of birth",
+          "birth_date": "Date of birth (DD/MM/YYYY or YYYY-MM-DD)",
           "height_cm": "Height",
           "scale_model": "Scale model",
           "sex": "Sex used by the LAICA profile"
@@ -59,15 +59,35 @@
     }
   },
   "sensor": {
-    "bmi": {"name": "BMI"},
-    "body_age": {"name": "Body age"},
-    "body_fat": {"name": "Body fat"},
-    "body_water": {"name": "Body water"},
-    "bone_mass": {"name": "Bone mass"},
-    "bmr": {"name": "Basal metabolic rate"},
-    "impedance": {"name": "Impedance"},
-    "muscle": {"name": "Muscle"},
-    "visceral_fat": {"name": "Visceral fat"},
-    "weight": {"name": "Weight"}
+    "bmi": {
+      "name": "BMI"
+    },
+    "body_age": {
+      "name": "Body age"
+    },
+    "body_fat": {
+      "name": "Body fat"
+    },
+    "body_water": {
+      "name": "Body water"
+    },
+    "bone_mass": {
+      "name": "Bone mass"
+    },
+    "bmr": {
+      "name": "Basal metabolic rate"
+    },
+    "impedance": {
+      "name": "Impedance"
+    },
+    "muscle": {
+      "name": "Muscle"
+    },
+    "visceral_fat": {
+      "name": "Visceral fat"
+    },
+    "weight": {
+      "name": "Weight"
+    }
   }
 }

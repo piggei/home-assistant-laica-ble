@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-dev.3 - 2026-09-19
+
+- Replaced the Home Assistant calendar date selector with a text field accepting `DD/MM/YYYY` and `YYYY-MM-DD`.
+- Normalize stored birth dates to ISO format.
+- Keep automatic Bluetooth discovery as the primary setup path after successful PS7002 validation.
+- Added integration-local brand assets under `custom_components/laica_ble/brand/`.
+- Removed the repository-maintainer URL note from the public README.
+- Direct new-device, protocol, and compatibility research to `piggei/laica-ps7002-ble-research`.
+- Keep `*Zone.Identifier` ignored.
+
 ## 0.1.0-dev.2 - 2026-09-19
 
 HACS packaging update.
