@@ -1,1 +1,5 @@
 blank_issues_enabled: false
+contact_links:
+  - name: New LAICA model / protocol research / measurement validation
+    url: https://github.com/piggei/laica-ps7002-ble-research/issues/new/choose
+    about: Use the research repository for device compatibility, BLE captures and algorithm validation.

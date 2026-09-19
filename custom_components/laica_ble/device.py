@@ -31,6 +31,10 @@ class LaicaBluetoothDeviceData:
         profile.validate()
         self._profile = profile
         self._gate = FinalMeasurementGate()
+        self._last_status: int | None = None
+        self._last_mode_raw: int | None = None
+        self._last_has_impedance: bool | None = None
+        self._accepted_final_count = 0
 
     def update(
         self, service_info: BluetoothServiceInfoBleak
@@ -39,6 +43,11 @@ class LaicaBluetoothDeviceData:
         frame = parse_manufacturer_data(service_info.manufacturer_data)
         if frame is None:
             return None
+
+        # Retain only non-sensitive protocol metadata for diagnostics.
+        self._last_status = frame.status
+        self._last_mode_raw = frame.mode.raw
+        self._last_has_impedance = frame.impedance is not None
 
         # We intentionally observe 0x80/0x82 only to re-arm the session gate.
         # They do not update entities in v0.1.x.
@@ -58,6 +67,8 @@ class LaicaBluetoothDeviceData:
                 sex=self._profile.sex,
             )
 
+        self._accepted_final_count += 1
+
         _LOGGER.debug(
             "Accepted final YoHealth measurement: weight=%.2f kg, "
             "impedance=%s, status=0x%02X, mode=0x%02X",
@@ -68,3 +79,21 @@ class LaicaBluetoothDeviceData:
         )
 
         return LaicaMeasurementUpdate(frame=frame, metrics=metrics, age=age)
+
+    def diagnostics(self) -> dict[str, int | bool | str | None]:
+        """Return non-sensitive protocol diagnostics.
+
+        Deliberately excludes weight, impedance value, profile values and the
+        raw payload because diagnostics files should not contain personal data.
+        """
+        return {
+            "last_protocol_status": (
+                f"0x{self._last_status:02X}" if self._last_status is not None else None
+            ),
+            "last_mode": (
+                f"0x{self._last_mode_raw:02X}" if self._last_mode_raw is not None else None
+            ),
+            "last_frame_had_impedance": self._last_has_impedance,
+            "accepted_final_measurements": self._accepted_final_count,
+        }
+

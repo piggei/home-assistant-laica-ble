@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 import logging
 
@@ -14,16 +15,20 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .algorithm import UserProfile
-from .const import (
-    CONF_BIRTH_DATE,
-    CONF_HEIGHT_CM,
-    CONF_SEX,
-)
+from .const import CONF_BIRTH_DATE, CONF_HEIGHT_CM, CONF_SEX
 from .device import LaicaBluetoothDeviceData, LaicaMeasurementUpdate
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+@dataclass(slots=True)
+class LaicaRuntimeData:
+    """Runtime objects shared by platforms and diagnostics."""
+
+    coordinator: PassiveBluetoothProcessorCoordinator[LaicaMeasurementUpdate | None]
+    device_data: LaicaBluetoothDeviceData
 
 
 def _profile_from_entry(entry: ConfigEntry) -> UserProfile:
@@ -53,7 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connectable=False,
     )
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = LaicaRuntimeData(
+        coordinator=coordinator,
+        device_data=device_data,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Start listening only after entity platforms registered their processors.

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-dev.6
+
+Consolidation release before `0.1.0`.
+
+- Added privacy-preserving Home Assistant diagnostics.
+- Added pytest regression tests for protocol, algorithm, final-frame gate and profile date parsing.
+- Added GitHub Actions for Ruff, pytest, self-test, compile/JSON checks, hassfest and HACS validation.
+- Moved birth-date parsing to a Home Assistant-independent helper module for direct testing.
+- Removed measurement/device-compatibility issue forms from this repository and linked those requests to the dedicated research repository.
+- No BLE protocol, final-frame policy or YoHealth formula changes.
+
 ## 0.1.0-dev.5 - 2026-09-19
 
 - Prioritize Body weight by creating/publishing it before all other measurement entities.

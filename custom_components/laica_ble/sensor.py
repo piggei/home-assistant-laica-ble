@@ -194,7 +194,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LAICA BLE sensors."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     model = str(entry.options[CONF_SCALE_MODEL])
 
     processor: PassiveBluetoothDataProcessor[

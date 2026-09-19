@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from typing import Any, override
 
 import voluptuous as vol
@@ -33,6 +33,7 @@ from .const import (
     SEX_FEMALE,
     SEX_MALE,
 )
+from .profile import parse_birth_date
 from .protocol import is_supported_manufacturer_data
 
 
@@ -97,20 +98,11 @@ def _profile_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
 
 
 
-def _parse_birth_date(value: str) -> date | None:
-    """Parse a birth date accepted by the UI and normalize it later to ISO."""
-    raw = value.strip()
-    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
-        try:
-            return datetime.strptime(raw, fmt).date()
-        except ValueError:
-            continue
-    return None
 
 def _profile_errors(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate profile fields that selectors cannot fully validate."""
     errors: dict[str, str] = {}
-    birth_date = _parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
+    birth_date = parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
     if birth_date is None:
         errors[CONF_BIRTH_DATE] = "invalid_birth_date"
         return errors
@@ -209,7 +201,7 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 model = str(user_input[CONF_SCALE_MODEL]).strip()
                 title = model if model.lower().startswith("laica") else f"LAICA {model}"
-                birth_date = _parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
+                birth_date = parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
                 assert birth_date is not None
                 return self.async_create_entry(
                     title=title,
@@ -247,7 +239,7 @@ class LaicaBleOptionsFlow(OptionsFlowWithReload):
                     self.config_entry,
                     title=title,
                 )
-                birth_date = _parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
+                birth_date = parse_birth_date(str(user_input[CONF_BIRTH_DATE]))
                 assert birth_date is not None
                 return self.async_create_entry(
                     title="",

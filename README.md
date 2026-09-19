@@ -3,7 +3,7 @@
 Experimental local Bluetooth integration for LAICA smart body-composition scales
 using the **YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.3**
+Current release: **0.1.0-dev.6**
 
 The integration was developed and directly validated with a **LAICA PS7002**.
 Compatibility with other LAICA/YoHealth models is an explicit research goal, but
@@ -153,6 +153,21 @@ https://github.com/piggei/laica-ps7002-ble-research
 
 Issues in this repository should focus on the Home Assistant integration itself.
 
+
+## Diagnostics
+
+Home Assistant diagnostics are available from the LAICA BLE integration/device menu.
+The exported diagnostics intentionally redact the Bluetooth address and all profile
+fields (birth date, height and sex branch), and do not include weight, impedance
+values or raw BLE payloads. They contain only protocol state useful for debugging.
+
+## Automated validation
+
+The repository includes `pytest` regression tests for the YoHealth parser, final-frame
+gate, profile date parsing and recovered body-composition algorithm. GitHub Actions
+also run Ruff, the legacy self-test, Python compilation, JSON validation, Home
+Assistant `hassfest`, and HACS repository validation on pushes and pull requests.
+
 ## Safety / interpretation
 
 Body-composition values from consumer BIA scales are estimates. This project
@@ -161,9 +176,7 @@ is not intended for diagnosis or medical decision-making.
 
 ## Development status
 
-This development build targets current Home Assistant Bluetooth processor/config-flow
-APIs. Automatic discovery has been verified with a real PS7002; measurement and entity
-behavior remain under active live validation.
+This consolidation build keeps the validated BLE/parser/algorithm behavior unchanged and adds diagnostics, regression tests and repository validation before the first stable `0.1.0` release. Automatic discovery, profile editing and real PS7002 measurements have been verified in Home Assistant.
 
 ## License and provenance
 
