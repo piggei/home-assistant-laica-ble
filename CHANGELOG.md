@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-dev.2 - 2026-09-19
+
+HACS packaging update.
+
+- Added root `hacs.json` so the repository can be added to HACS as a custom integration.
+- Added HACS brand icon assets.
+- Added HACS installation instructions to the README.
+- Added `*Zone.Identifier` to `.gitignore` for Windows/WSL extracted-file metadata.
+- Removed generated Python cache files from the distribution.
+
 ## 0.1.0-dev.1 - 2026-09-19
 
 Initial Home Assistant custom-integration development build.

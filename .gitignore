@@ -12,4 +12,5 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
 *Zone.Identifier

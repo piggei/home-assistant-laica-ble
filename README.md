@@ -3,7 +3,7 @@
 Experimental local Bluetooth integration for LAICA smart body-composition scales
 using the **YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.1**
+Current release: **0.1.0-dev.2**
 
 The integration was developed and directly validated with a **LAICA PS7002**.
 Compatibility with other LAICA/YoHealth models is an explicit research goal, but
@@ -73,6 +73,27 @@ we have captured and documented behavior with socks/shoes or failed electrode
 contact.
 
 ## Installation
+
+### HACS (recommended for development installs)
+
+The repository is structured as a HACS custom integration. To install it from
+GitHub without copying files manually:
+
+1. Open **HACS** in Home Assistant.
+2. Open the menu in the top-right corner and choose **Custom repositories**.
+3. Enter this repository URL and select **Integration** as the category.
+4. Add the repository, open **LAICA BLE**, and choose **Download**.
+5. Restart Home Assistant when HACS requests it.
+6. Start a weighing so that the scale advertises over BLE.
+7. Go to **Settings -> Devices & services**. Home Assistant should discover
+   **LAICA BLE** automatically; alternatively choose **Add integration -> LAICA BLE**
+   while the scale is advertising.
+8. Enter the local profile values and the scale model.
+
+The repository contains `hacs.json` and the HACS brand assets required for a
+custom integration repository. If no GitHub Release exists yet, HACS can install
+the current default branch. Once releases are published, HACS can offer those
+versions explicitly.
 
 ### Manual
 
