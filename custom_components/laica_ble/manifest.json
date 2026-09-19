@@ -1,7 +1,7 @@
 {
   "domain": "laica_ble",
   "name": "LAICA BLE",
-  "version": "0.1.0-dev.4",
+  "version": "0.1.0-dev.5",
   "bluetooth": [
     {
       "connectable": false,

@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfMass, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_SCALE_MODEL, MANUFACTURER, PROTOCOL_NAME
@@ -39,6 +40,9 @@ KEY_BODY_AGE = "body_age"
 KEY_BMR = "bmr"
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    # Keep the primary measurement first. Home Assistant does not expose a
+    # supported "display order" API for the device page, but creating the
+    # principal sensor first gives the frontend the best possible hint.
     KEY_WEIGHT: SensorEntityDescription(
         key=KEY_WEIGHT,
         translation_key="body_weight",
@@ -46,14 +50,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-    ),
-    KEY_IMPEDANCE: SensorEntityDescription(
-        key=KEY_IMPEDANCE,
-        translation_key=KEY_IMPEDANCE,
-        icon="mdi:omega",
-        native_unit_of_measurement=OHM,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
     ),
     KEY_BMI: SensorEntityDescription(
         key=KEY_BMI,
@@ -103,14 +99,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
-    KEY_BODY_AGE: SensorEntityDescription(
-        key=KEY_BODY_AGE,
-        translation_key=KEY_BODY_AGE,
-        icon="mdi:calendar-account",
-        native_unit_of_measurement=UnitOfTime.YEARS,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-    ),
     KEY_BMR: SensorEntityDescription(
         key=KEY_BMR,
         translation_key=KEY_BMR,
@@ -118,6 +106,24 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=KCAL_PER_DAY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+    ),
+    KEY_BODY_AGE: SensorEntityDescription(
+        key=KEY_BODY_AGE,
+        translation_key=KEY_BODY_AGE,
+        icon="mdi:calendar-account",
+        native_unit_of_measurement=UnitOfTime.YEARS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    KEY_IMPEDANCE: SensorEntityDescription(
+        key=KEY_IMPEDANCE,
+        translation_key=KEY_IMPEDANCE,
+        icon="mdi:omega",
+        native_unit_of_measurement=OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -162,15 +168,18 @@ def measurement_to_bluetooth_update(
     # their last valid measurement instead of being overwritten with nonsense.
     if update.frame.impedance is not None and update.metrics is not None:
         metrics = update.metrics
-        add(KEY_IMPEDANCE, update.frame.impedance)
+        # Publish the user-facing body-composition values in the same logical
+        # order used in the documentation. Impedance is added last and marked
+        # diagnostic so it appears separately from normal measurements.
         add(KEY_BMI, metrics.bmi)
         add(KEY_BODY_FAT, metrics.body_fat_pct)
         add(KEY_WATER, metrics.water_pct)
         add(KEY_MUSCLE, metrics.muscle_pct)
         add(KEY_BONE, metrics.bone_mass_kg)
         add(KEY_VISCERAL_FAT, metrics.visceral_fat_pct)
-        add(KEY_BODY_AGE, metrics.body_age)
         add(KEY_BMR, metrics.bmr_kcal_per_day)
+        add(KEY_BODY_AGE, metrics.body_age)
+        add(KEY_IMPEDANCE, update.frame.impedance)
 
     return PassiveBluetoothDataUpdate(
         devices={None: device_info},

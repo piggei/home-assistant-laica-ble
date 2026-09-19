@@ -183,3 +183,8 @@ logger:
 
 The integration logs accepted final frame metadata, not the configured date of
 birth or other profile details.
+
+
+## Entity presentation
+
+**Body weight** is treated as the primary measurement and is created first. Impedance is enabled as a diagnostic entity. Body age is disabled by default and can be enabled from the entity registry. Home Assistant controls the final order shown on the device page.

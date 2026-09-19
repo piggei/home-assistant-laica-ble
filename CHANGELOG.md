@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-dev.5 - 2026-09-19
+
+- Prioritize Body weight by creating/publishing it before all other measurement entities.
+- Reordered body-composition entities into a more natural presentation sequence.
+- Mark Impedance as a Home Assistant diagnostic entity while keeping it enabled by default.
+- Disable Body age by default; users can enable it from the entity registry if desired.
+- No BLE protocol or YoHealth calculation changes.
+
 ## 0.1.0-dev.4
 
 - Fixed Home Assistant entity translations to use the current `entity.sensor` schema.
