@@ -1,0 +1,49 @@
+name: "Bug report"
+description: "Report a problem in the LAICA BLE Home Assistant integration."
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.9.x"
+    validations:
+      required: true
+  - type: input
+    id: integration_version
+    attributes:
+      label: LAICA BLE version / commit
+      placeholder: "0.1.0-dev.1"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Scale model
+      placeholder: "LAICA PS7002"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe what happened and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Home Assistant logs
+      description: Remove unrelated traffic and personal information.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: frame
+    attributes:
+      label: BLE manufacturer frame (if known)
+      placeholder: "02 A1 09 FF ... AA"
+      render: text
+    validations:
+      required: false

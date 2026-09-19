@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This scale is already configured.",
+      "no_devices_found": "No compatible LAICA/YoHealth scale is currently advertising. Start a weighing and try again.",
+      "not_supported": "The discovered Bluetooth advertisement is not a supported YoHealth frame."
+    },
+    "error": {
+      "birth_date_in_future": "The date of birth cannot be in the future.",
+      "invalid_birth_date": "Enter a valid date of birth.",
+      "model_required": "Enter the scale model."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "profile": {
+        "title": "Configure LAICA BLE",
+        "description": "Configure the local profile used to calculate body composition for {name}. The scale itself does not transmit a person/profile identifier, so one Home Assistant config entry can calculate body composition for one person only.",
+        "data": {
+          "birth_date": "Date of birth",
+          "height_cm": "Height",
+          "scale_model": "Scale model",
+          "sex": "Sex used by the LAICA profile"
+        }
+      },
+      "user": {
+        "title": "Select a LAICA BLE scale",
+        "description": "Start a weighing so the scale is advertising, then select it.",
+        "data": {
+          "address": "Scale"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "birth_date_in_future": "The date of birth cannot be in the future.",
+      "invalid_birth_date": "Enter a valid date of birth.",
+      "model_required": "Enter the scale model."
+    },
+    "step": {
+      "init": {
+        "title": "LAICA BLE profile",
+        "description": "These values are stored locally and are used only to reproduce the recovered YoHealth body-composition calculations.",
+        "data": {
+          "birth_date": "Date of birth",
+          "height_cm": "Height",
+          "scale_model": "Scale model",
+          "sex": "Sex used by the LAICA profile"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sex": {
+      "options": {
+        "female": "Female",
+        "male": "Male"
+      }
+    }
+  },
+  "sensor": {
+    "bmi": {"name": "BMI"},
+    "body_age": {"name": "Body age"},
+    "body_fat": {"name": "Body fat"},
+    "body_water": {"name": "Body water"},
+    "bone_mass": {"name": "Bone mass"},
+    "bmr": {"name": "Basal metabolic rate"},
+    "impedance": {"name": "Impedance"},
+    "muscle": {"name": "Muscle"},
+    "visceral_fat": {"name": "Visceral fat"},
+    "weight": {"name": "Weight"}
+  }
+}

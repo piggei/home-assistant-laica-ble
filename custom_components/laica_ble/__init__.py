@@ -1,0 +1,66 @@
+"""LAICA BLE integration."""
+
+from __future__ import annotations
+
+from datetime import date
+import logging
+
+from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothProcessorCoordinator,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+
+from .algorithm import UserProfile
+from .const import (
+    CONF_BIRTH_DATE,
+    CONF_HEIGHT_CM,
+    CONF_SEX,
+)
+from .device import LaicaBluetoothDeviceData, LaicaMeasurementUpdate
+
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+def _profile_from_entry(entry: ConfigEntry) -> UserProfile:
+    """Build the local calculation profile from config-entry options."""
+    return UserProfile(
+        sex=str(entry.options[CONF_SEX]),
+        birth_date=date.fromisoformat(str(entry.options[CONF_BIRTH_DATE])),
+        height_cm=float(entry.options[CONF_HEIGHT_CM]),
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up LAICA BLE from a config entry."""
+    address = entry.unique_id
+    assert address is not None
+
+    device_data = LaicaBluetoothDeviceData(_profile_from_entry(entry))
+
+    coordinator: PassiveBluetoothProcessorCoordinator[
+        LaicaMeasurementUpdate | None
+    ] = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address=address,
+        mode=BluetoothScanningMode.PASSIVE,
+        update_method=device_data.update,
+        connectable=False,
+    )
+
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Start listening only after entity platforms registered their processors.
+    entry.async_on_unload(coordinator.async_start())
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a LAICA BLE config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

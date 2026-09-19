@@ -1,0 +1,68 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Questa bilancia è già configurata.",
+      "no_devices_found": "Nessuna bilancia LAICA/YoHealth compatibile sta trasmettendo. Avvia una pesata e riprova.",
+      "not_supported": "L'advertising Bluetooth rilevato non contiene un frame YoHealth supportato."
+    },
+    "error": {
+      "birth_date_in_future": "La data di nascita non può essere nel futuro.",
+      "invalid_birth_date": "Inserisci una data di nascita valida.",
+      "model_required": "Inserisci il modello della bilancia."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "profile": {
+        "title": "Configura LAICA BLE",
+        "description": "Configura il profilo locale usato per calcolare la composizione corporea per {name}. La bilancia non trasmette l'identità della persona/profilo: una voce di configurazione Home Assistant può quindi calcolare la composizione corporea per una sola persona.",
+        "data": {
+          "birth_date": "Data di nascita",
+          "height_cm": "Altezza",
+          "scale_model": "Modello bilancia",
+          "sex": "Sesso impostato nel profilo LAICA"
+        }
+      },
+      "user": {
+        "title": "Seleziona una bilancia LAICA BLE",
+        "description": "Avvia una pesata in modo che la bilancia trasmetta via Bluetooth, quindi selezionala.",
+        "data": {"address": "Bilancia"}
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "birth_date_in_future": "La data di nascita non può essere nel futuro.",
+      "invalid_birth_date": "Inserisci una data di nascita valida.",
+      "model_required": "Inserisci il modello della bilancia."
+    },
+    "step": {
+      "init": {
+        "title": "Profilo LAICA BLE",
+        "description": "Questi valori rimangono locali e vengono usati esclusivamente per riprodurre i calcoli di composizione corporea YoHealth ricostruiti.",
+        "data": {
+          "birth_date": "Data di nascita",
+          "height_cm": "Altezza",
+          "scale_model": "Modello bilancia",
+          "sex": "Sesso impostato nel profilo LAICA"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sex": {
+      "options": {"female": "Femminile", "male": "Maschile"}
+    }
+  },
+  "sensor": {
+    "bmi": {"name": "BMI"},
+    "body_age": {"name": "Età corporea"},
+    "body_fat": {"name": "Grasso corporeo"},
+    "body_water": {"name": "Acqua corporea"},
+    "bone_mass": {"name": "Massa ossea"},
+    "bmr": {"name": "Metabolismo basale"},
+    "impedance": {"name": "Impedenza"},
+    "muscle": {"name": "Massa muscolare"},
+    "visceral_fat": {"name": "Grasso viscerale"},
+    "weight": {"name": "Peso"}
+  }
+}
