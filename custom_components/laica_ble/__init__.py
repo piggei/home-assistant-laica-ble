@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
@@ -75,3 +76,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a LAICA BLE config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Make a removed scale immediately eligible for Bluetooth rediscovery."""
+    if entry.unique_id is not None:
+        bluetooth.async_rediscover_address(hass, entry.unique_id)

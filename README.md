@@ -3,7 +3,7 @@
 Experimental local Bluetooth integration for LAICA smart body-composition scales
 using the **YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.9**
+Current release: **0.1.0-dev.10**
 
 The integration was developed and directly validated with a **LAICA PS7002**.
 Compatibility with other LAICA/YoHealth models is an explicit research goal, but
@@ -96,9 +96,8 @@ GitHub without copying files manually:
 8. Open the discovery card and enter the local profile values and scale model.
 
 The repository contains `hacs.json` and the HACS brand assets required for a
-custom integration repository. If no GitHub Release exists yet, HACS can install
-the current default branch. Once releases are published, HACS can offer those
-versions explicitly.
+custom integration repository. Development builds used for HACS testing are
+published as explicit GitHub Releases so the installed version is unambiguous.
 
 ### Manual
 
@@ -116,6 +115,21 @@ versions explicitly.
 6. Open the discovery card and enter the local profile values and scale model.
 
 No YAML configuration is required.
+
+## Removal and rediscovery
+
+When a configured LAICA BLE entry is removed, the integration asks Home
+Assistant's Bluetooth manager to rediscover the scale address immediately. This
+avoids requiring a Home Assistant restart before the same scale can be set up
+again.
+
+If discovery does not reappear, check **Settings -> Devices & services** for an
+ignored LAICA BLE discovery and restore it before troubleshooting the BLE parser.
+An ignored discovery is intentionally suppressed by Home Assistant.
+
+HACS also creates its own repository-management device named **LAICA BLE**. That
+HACS device is separate from the physical **LAICA PS7002** device created by this
+integration and does not represent a second scale.
 
 ## Profile changes
 
@@ -136,7 +150,7 @@ payload:
 
 - `WW WW`: weight raw, big-endian;
 - `ZZ ZZ`: health/impedance raw, big-endian (`FFFF` = unavailable);
-- `SS`: status (`86` = accepted final status in this release);
+- `SS`: status (`80` = in progress, `82` = stable weight, `86` = final body-composition result);
 - `MM`: mode/precision (`21` on the validated PS7002);
 - `CC`: checksum;
 - `AA`: terminator.

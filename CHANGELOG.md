@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-dev.10 - 2026-09-20
+
+Lifecycle hardening based on clean remove/reinstall testing of `0.1.0-dev.9`.
+
+- Trigger Bluetooth rediscovery of the configured scale address when a LAICA BLE
+  config entry is removed, following the current Home Assistant Bluetooth API
+  guidance.
+- Keep measurement parsing, session handling, entities, profile logic and the
+  recovered YoHealth formulas unchanged from `0.1.0-dev.9`.
+- Add a static regression test proving that Body age remains disabled by default.
+- Document the difference between the HACS repository-management device and the
+  physical LAICA scale device, plus the effect of an ignored discovery entry.
+- Correct the README protocol summary for `0x80` / `0x82` / `0x86` states and
+  remove the ambiguous claim about HACS installing an unpublished default branch.
+
 ## 0.1.0-dev.9 - 2026-09-20
 
 Discovery hardening based on the validated `0.1.0-dev.8` baseline.
