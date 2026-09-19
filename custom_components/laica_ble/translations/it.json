@@ -8,7 +8,8 @@
     "error": {
       "birth_date_in_future": "La data di nascita non può essere nel futuro.",
       "invalid_birth_date": "Inserisci una data valida nel formato GG/MM/AAAA oppure AAAA-MM-GG.",
-      "model_required": "Inserisci il modello della bilancia."
+      "model_required": "Inserisci il modello della bilancia.",
+      "no_devices_found": "Nessuna bilancia LAICA/YoHealth compatibile rilevata. Avvia una pesata, mantieni la bilancia attiva e riprova."
     },
     "flow_title": "{name}",
     "step": {
@@ -28,6 +29,10 @@
         "data": {
           "address": "Bilancia"
         }
+      },
+      "scan": {
+        "title": "Trova una bilancia LAICA BLE",
+        "description": "Sali sulla bilancia per attivarla e avviare una pesata. Mentre sta trasmettendo, continua per cercare un dispositivo LAICA/YoHealth compatibile."
       }
     }
   },

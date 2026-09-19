@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 import voluptuous as vol
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -154,11 +155,31 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._discovery.title}
         return await self.async_step_profile()
 
+    def _refresh_discovered(self) -> None:
+        """Refresh supported scales from Home Assistant's Bluetooth cache."""
+        configured = self._async_current_ids(include_ignore=False)
+        for info in async_discovered_service_info(self.hass, False):
+            if info.address in configured or info.address in self._discovered:
+                continue
+            if is_supported_manufacturer_data(info.manufacturer_data):
+                self._discovered[info.address] = Discovery(_device_title(info), info)
+
+    def _show_device_picker(self) -> ConfigFlowResult:
+        """Show currently discovered compatible scales."""
+        titles = {
+            address: discovery.title
+            for address, discovery in self._discovered.items()
+        }
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow manual setup by selecting a currently advertising scale."""
+        """Allow manual setup from cached or freshly scanned advertisements."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             discovery = self._discovered[address]
@@ -168,23 +189,29 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
             self.context["title_placeholders"] = {"name": discovery.title}
             return await self.async_step_profile()
 
-        configured = self._async_current_ids(include_ignore=False)
-        for info in async_discovered_service_info(self.hass, False):
-            if info.address in configured or info.address in self._discovered:
-                continue
-            if is_supported_manufacturer_data(info.manufacturer_data):
-                self._discovered[info.address] = Discovery(_device_title(info), info)
+        self._refresh_discovered()
+        if self._discovered:
+            return self._show_device_picker()
 
-        if not self._discovered:
-            return self.async_abort(reason="no_devices_found")
+        return await self.async_step_scan()
 
-        titles = {
-            address: discovery.title
-            for address, discovery in self._discovered.items()
-        }
+    async def async_step_scan(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Wait for a scale advertisement and allow retry without aborting setup."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            await bluetooth.async_request_active_scan(self.hass)
+            self._refresh_discovered()
+            if self._discovered:
+                return self._show_device_picker()
+            errors["base"] = "no_devices_found"
+
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
+            step_id="scan",
+            data_schema=vol.Schema({}),
+            errors=errors,
         )
 
     async def async_step_profile(

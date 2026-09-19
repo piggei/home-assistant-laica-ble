@@ -8,7 +8,8 @@
     "error": {
       "birth_date_in_future": "The date of birth cannot be in the future.",
       "invalid_birth_date": "Enter a valid date of birth as DD/MM/YYYY or YYYY-MM-DD.",
-      "model_required": "Enter the scale model."
+      "model_required": "Enter the scale model.",
+      "no_devices_found": "No compatible LAICA/YoHealth scale was detected. Start a weighing, keep the scale awake, and try again."
     },
     "flow_title": "{name}",
     "step": {
@@ -28,6 +29,10 @@
         "data": {
           "address": "Scale"
         }
+      },
+      "scan": {
+        "title": "Find a LAICA BLE scale",
+        "description": "Step on the scale to wake it and start a weighing. While it is advertising, continue to scan for a compatible LAICA/YoHealth device."
       }
     }
   },

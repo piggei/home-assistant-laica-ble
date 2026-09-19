@@ -84,8 +84,8 @@ Observed PS7002 transitions include:
 - `0x86`: complete/final body-composition result.
 
 Direct footwear testing showed that a valid weighing can end at `0x82` when the
-user is not making electrical contact with the electrodes. Release `0.1.0`
-therefore uses this policy:
+user is not making electrical contact with the electrodes. Release `0.1.0` and later
+therefore use this policy:
 
 1. `0x80` never updates entities and re-arms a new weighing session.
 2. The first `0x82` is retained as a stable weight-only candidate for 2.5

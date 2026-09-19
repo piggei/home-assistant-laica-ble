@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.1 - 2026-09-19
+
+Discovery/reinstallation reliability release.
+
+- Added `async_remove_entry()` Bluetooth rediscovery so a removed scale becomes
+  eligible for setup again without requiring a Home Assistant restart.
+- Reworked manual setup so **Add integration -> LAICA BLE** first checks the
+  Bluetooth cache and, when empty, offers a retryable scan step instead of
+  aborting with `no_devices_found`.
+- The retry step requests Home Assistant's official one-shot active scan and then
+  rechecks compatible non-connectable YoHealth advertisements.
+- Added English and Italian UI text for the scan/retry flow.
+- Updated HACS/manual installation, fresh-install, removal/reinstallation and
+  troubleshooting documentation.
+- Updated release references and issue-template version to `0.1.1`.
+- No changes to YoHealth packet parsing, `0x80`/`0x82`/`0x86` measurement policy,
+  entity calculations, or recovered body-composition formulas.
+
 ## 0.1.0 - 2026-09-19
 
 First stable release of the LAICA BLE Home Assistant integration.
