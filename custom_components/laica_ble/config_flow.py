@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 import voluptuous as vol
-from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
@@ -33,15 +31,11 @@ from .const import (
     DOMAIN,
     SEX_FEMALE,
     SEX_MALE,
-    YOHEALTH_COMPANY_ID,
 )
 from .profile import parse_birth_date
 from .protocol import is_discovery_manufacturer_data
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_TIMEOUT_SECONDS = 15.0
-SCAN_CONFIRM = "scan_now"
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,38 +97,6 @@ def _profile_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
-def _manufacturer_summary(info: BluetoothServiceInfoBleak) -> str:
-    """Return privacy-reduced manufacturer metadata for debug logging."""
-    parts: list[str] = []
-    for company_id, payload in info.manufacturer_data.items():
-        raw = bytes(payload)
-        prefix = raw[:2].hex(" ").upper() if raw else "<empty>"
-        parts.append(f"0x{company_id:04X}:len={len(raw)} prefix={prefix}")
-    return ", ".join(parts) if parts else "<none>"
-
-
-def _is_debug_candidate(info: BluetoothServiceInfoBleak) -> bool:
-    """Return whether a BLE advertisement is relevant to discovery debugging."""
-    name = (info.name or "").lower()
-    return (
-        "yohealth" in name
-        or YOHEALTH_COMPANY_ID in info.manufacturer_data
-        or 0x02A1 in info.manufacturer_data
-    )
-
-
-def _log_candidate(info: BluetoothServiceInfoBleak, source: str) -> None:
-    """Log enough BLE metadata to diagnose discovery without logging weight data."""
-    _LOGGER.debug(
-        "LAICA BLE %s candidate: name=%s address=%s connectable=%s mfg=[%s]",
-        source,
-        info.name,
-        info.address,
-        info.connectable,
-        _manufacturer_summary(info),
-    )
-
-
 def _profile_errors(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate profile fields that selectors cannot fully validate."""
     errors: dict[str, str] = {}
@@ -177,23 +139,48 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return LaicaBleOptionsFlow()
 
+    def _refresh_discovered(self) -> None:
+        """Refresh supported scales currently known to Home Assistant Bluetooth."""
+        configured = self._async_current_ids(include_ignore=False)
+        discovered: dict[str, Discovery] = {}
+        for info in async_discovered_service_info(self.hass, False):
+            if info.address in configured:
+                continue
+            if is_discovery_manufacturer_data(info.manufacturer_data):
+                discovered[info.address] = Discovery(_device_title(info), info)
+        self._discovered = discovered
+        _LOGGER.debug(
+            "Manual discovery cache contains %d compatible LAICA/YoHealth scale(s)",
+            len(self._discovered),
+        )
+
+    async def _select_discovery(self, discovery: Discovery) -> ConfigFlowResult:
+        """Select a discovery and continue to the profile step."""
+        await self.async_set_unique_id(
+            discovery.info.address,
+            raise_on_progress=False,
+        )
+        self._abort_if_unique_id_configured()
+        self._discovery = discovery
+        self.context["title_placeholders"] = {"name": discovery.title}
+        return await self.async_step_profile()
+
     @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle automatic Bluetooth discovery."""
-        _log_candidate(discovery_info, "automatic-discovery")
+        # Discovery deliberately checks only the public YoHealth signature.
+        # A waking scale can emit transient frames before a complete measurement;
+        # runtime measurements remain strictly validated by protocol.py.
         if not is_discovery_manufacturer_data(discovery_info.manufacturer_data):
-            _LOGGER.debug(
-                "Ignoring Bluetooth discovery for %s: "
-                "YoHealth Company ID/header not present",
-                discovery_info.address,
-            )
             return self.async_abort(reason="not_supported")
 
-        # Do not require a complete/checksum-valid measurement for setup. The first
-        # advertisement seen while the scale wakes can be transient. Measurement
-        # parsing remains strict once the integration is configured.
+        _LOGGER.debug(
+            "Automatic Bluetooth discovery accepted LAICA/YoHealth device %s (%s)",
+            discovery_info.name or "YoHealth",
+            discovery_info.address,
+        )
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
@@ -201,21 +188,32 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._discovery.title}
         return await self.async_step_profile()
 
-    def _refresh_discovered(self) -> None:
-        """Refresh supported scales from Home Assistant's Bluetooth cache."""
-        configured = self._async_current_ids(include_ignore=False)
-        cached = async_discovered_service_info(self.hass, False)
-        _LOGGER.debug("Manual discovery cache contains %d BLE devices", len(cached))
-        for info in cached:
-            if _is_debug_candidate(info):
-                _log_candidate(info, "cached-observed")
-            if info.address in configured or info.address in self._discovered:
-                continue
-            if is_discovery_manufacturer_data(info.manufacturer_data):
-                self._discovered[info.address] = Discovery(_device_title(info), info)
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow manual setup from scales already present in the BLE cache."""
+        if user_input is not None:
+            address = user_input[CONF_ADDRESS]
+            discovery = self._discovered.get(address)
+            if discovery is None:
+                # The scale may have gone to sleep between displaying the form and
+                # submitting it. Refresh once before failing cleanly.
+                self._refresh_discovered()
+                discovery = self._discovered.get(address)
+                if discovery is None:
+                    return self.async_abort(reason="no_devices_found")
+            return await self._select_discovery(discovery)
 
-    def _show_device_picker(self) -> ConfigFlowResult:
-        """Show currently discovered compatible scales."""
+        self._refresh_discovered()
+        if not self._discovered:
+            return self.async_abort(reason="no_devices_found")
+
+        # The overwhelmingly common case is one scale. Avoid an unnecessary
+        # intermediate picker and go directly to the user-profile form.
+        if len(self._discovered) == 1:
+            return await self._select_discovery(next(iter(self._discovered.values())))
+
         titles = {
             address: discovery.title
             for address, discovery in self._discovered.items()
@@ -223,133 +221,6 @@ class LaicaBleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
-        )
-
-    @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Allow manual setup from cached or freshly scanned advertisements."""
-        if user_input is not None:
-            address = user_input[CONF_ADDRESS]
-            discovery = self._discovered[address]
-            await self.async_set_unique_id(address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            self._discovery = discovery
-            self.context["title_placeholders"] = {"name": discovery.title}
-            return await self.async_step_profile()
-
-        self._refresh_discovered()
-        if self._discovered:
-            return self._show_device_picker()
-
-        return await self.async_step_scan()
-
-    async def async_step_scan(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Wait for a live scale advertisement and allow retry without aborting."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            _LOGGER.info(
-                "Starting manual LAICA BLE scan/wait window (%.1f seconds)",
-                SCAN_TIMEOUT_SECONDS,
-            )
-
-            # First perform Home Assistant's official one-shot active sweep, then
-            # inspect the shared cache. This helps AUTO-mode local/proxy scanners.
-            await bluetooth.async_request_active_scan(self.hass)
-            self._refresh_discovered()
-            if self._discovered:
-                _LOGGER.info(
-                    "Manual LAICA BLE scan found %d compatible scale(s) in cache",
-                    len(self._discovered),
-                )
-                return self._show_device_picker()
-
-            # Log every non-connectable advertisement at DEBUG during this short
-            # diagnostic window. Relevant YoHealth-like advertisements are also
-            # logged at INFO so they are visible with Home Assistant's normal log
-            # level. Only company IDs, lengths and two payload-prefix bytes are
-            # logged; measurement payload contents are deliberately omitted.
-            seen_packets = 0
-            seen_addresses: set[str] = set()
-
-            def _scan_match(info: BluetoothServiceInfoBleak) -> bool:
-                nonlocal seen_packets
-                seen_packets += 1
-                seen_addresses.add(info.address)
-                _LOGGER.debug(
-                    "LAICA BLE scan advertisement: name=%s address=%s "
-                    "connectable=%s mfg=[%s]",
-                    info.name,
-                    info.address,
-                    info.connectable,
-                    _manufacturer_summary(info),
-                )
-                if _is_debug_candidate(info):
-                    _LOGGER.info(
-                        "LAICA BLE relevant advertisement: name=%s address=%s "
-                        "connectable=%s mfg=[%s]",
-                        info.name,
-                        info.address,
-                        info.connectable,
-                        _manufacturer_summary(info),
-                    )
-                return is_discovery_manufacturer_data(info.manufacturer_data)
-
-            # Keep AUTO-mode scanners active for the whole wait window. An active
-            # scan still receives ordinary non-scannable advertisements such as
-            # those emitted by the PS7002.
-            try:
-                info = await bluetooth.async_process_advertisements(
-                    self.hass,
-                    _scan_match,
-                    {"connectable": False},
-                    BluetoothScanningMode.ACTIVE,
-                    SCAN_TIMEOUT_SECONDS,
-                )
-            except TimeoutError:
-                _LOGGER.info(
-                    "Manual LAICA BLE scan timed out after %.1f seconds: "
-                    "%d advertisement(s) from %d unique address(es), no "
-                    "compatible YoHealth signature",
-                    SCAN_TIMEOUT_SECONDS,
-                    seen_packets,
-                    len(seen_addresses),
-                )
-                self._refresh_discovered()
-                if self._discovered:
-                    return self._show_device_picker()
-                errors["base"] = "no_devices_found"
-            else:
-                _log_candidate(info, "live-manual-scan")
-                _LOGGER.info(
-                    "Manual LAICA BLE scan matched a compatible advertisement "
-                    "after observing %d advertisement(s) from %d unique "
-                    "address(es)",
-                    seen_packets,
-                    len(seen_addresses),
-                )
-                configured = self._async_current_ids(include_ignore=False)
-                if info.address not in configured:
-                    self._discovered[info.address] = Discovery(
-                        _device_title(info), info
-                    )
-                    return self._show_device_picker()
-                errors["base"] = "already_configured"
-
-        return self.async_show_form(
-            step_id="scan",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        SCAN_CONFIRM, default=True
-                    ): selector.BooleanSelector(),
-                }
-            ),
-            errors=errors,
         )
 
     async def async_step_profile(

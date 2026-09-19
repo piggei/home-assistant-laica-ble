@@ -9,8 +9,7 @@
     "error": {
       "birth_date_in_future": "La data di nascita non può essere nel futuro.",
       "invalid_birth_date": "Inserisci una data valida nel formato GG/MM/AAAA oppure AAAA-MM-GG.",
-      "model_required": "Inserisci il modello della bilancia.",
-      "no_devices_found": "Nessuna bilancia LAICA/YoHealth compatibile rilevata. Avvia una pesata, mantieni la bilancia attiva e riprova."
+      "model_required": "Inserisci il modello della bilancia."
     },
     "flow_title": "{name}",
     "step": {
@@ -29,16 +28,6 @@
         "description": "Avvia una pesata in modo che la bilancia trasmetta via Bluetooth, quindi selezionala.",
         "data": {
           "address": "Bilancia"
-        }
-      },
-      "scan": {
-        "title": "Cerca la bilancia LAICA BLE",
-        "description": "Sali sulla bilancia e avvia una pesata. Attiva l’opzione qui sotto e premi Invia: Home Assistant cercherà per circa 15 secondi un advertising LAICA/YoHealth compatibile.",
-        "data": {
-          "scan_now": "Bilancia attiva: cerca adesso"
-        },
-        "data_description": {
-          "scan_now": "Attiva la bilancia iniziando una pesata, quindi invia questo modulo mentre il display è acceso."
         }
       }
     }

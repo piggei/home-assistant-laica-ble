@@ -9,8 +9,7 @@
     "error": {
       "birth_date_in_future": "The date of birth cannot be in the future.",
       "invalid_birth_date": "Enter a valid date of birth as DD/MM/YYYY or YYYY-MM-DD.",
-      "model_required": "Enter the scale model.",
-      "no_devices_found": "No compatible LAICA/YoHealth scale was detected. Start a weighing, keep the scale awake, and try again."
+      "model_required": "Enter the scale model."
     },
     "flow_title": "{name}",
     "step": {
@@ -29,16 +28,6 @@
         "description": "Start a weighing so the scale is advertising, then select it.",
         "data": {
           "address": "Scale"
-        }
-      },
-      "scan": {
-        "title": "Search for the LAICA BLE scale",
-        "description": "Step on the scale and start a weighing. Enable the option below and press Submit: Home Assistant will wait for about 15 seconds for a compatible LAICA/YoHealth advertisement.",
-        "data": {
-          "scan_now": "Scale is active: search now"
-        },
-        "data_description": {
-          "scan_now": "Turn the scale on by starting a weighing, then submit this form while the display is active."
         }
       }
     }

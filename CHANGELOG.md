@@ -1,6 +1,20 @@
 # Changelog
 
-## 0.1.1-build2 - 2026-09-20
+## 0.1.1-build3 - internal validation build
+
+- Rebased the setup path on the last verified `0.1.0-dev.8` config-flow design.
+- Kept header-only YoHealth identification for discovery, while retaining strict checksum validation for runtime measurements.
+- Removed the experimental 15-second active-scan step and its `scan_now` control.
+- Automatic Bluetooth discovery now proceeds directly to the profile form.
+- Manual Add Integration now uses Home Assistant's current Bluetooth cache; with one compatible scale it proceeds directly to the profile form, with multiple scales it shows a picker.
+- Kept Bluetooth rediscovery after config-entry removal.
+- Reduced diagnostic logging to meaningful flow transitions.
+- Kept runtime translations only under `translations/`; no `strings.json`.
+- Removed test/cache artefacts from the distributable package.
+- No changes to measurement parsing, `0x80`/`0x82`/`0x86` session handling, sensors, or the recovered YoHealth algorithm.
+
+
+## 0.1.1-build3 - 2026-09-20
 
 Internal discovery diagnostic build; not intended as a public HACS release.
 

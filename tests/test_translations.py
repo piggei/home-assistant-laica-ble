@@ -14,13 +14,18 @@ def test_custom_component_does_not_ship_core_strings_file() -> None:
     assert not (INTEGRATION / "strings.json").exists()
 
 
-def test_scan_flow_translations_are_complete() -> None:
-    """The manual discovery step must never fall back to raw schema keys."""
+def test_runtime_translations_cover_all_visible_config_steps() -> None:
+    """All user-visible flow fields must have runtime translations."""
+    expected = {
+        "profile": {"birth_date", "height_cm", "scale_model", "sex"},
+        "user": {"address"},
+    }
     for language in ("en", "it"):
         path = INTEGRATION / "translations" / f"{language}.json"
         data = json.loads(path.read_text(encoding="utf-8"))
-        scan = data["config"]["step"]["scan"]
-        assert scan["title"]
-        assert scan["description"]
-        assert scan["data"]["scan_now"]
-        assert scan["data_description"]["scan_now"]
+        steps = data["config"]["step"]
+        assert "scan" not in steps
+        for step_id, fields in expected.items():
+            assert steps[step_id]["title"]
+            assert fields <= set(steps[step_id]["data"])
+            assert all(steps[step_id]["data"][field] for field in fields)

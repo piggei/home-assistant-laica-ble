@@ -3,26 +3,29 @@
 Local Bluetooth integration for LAICA smart body-composition scales using the
 **YoHealth** advertising protocol.
 
-Current development build: **0.1.1-build2**
+Current internal validation build: **0.1.1-build3**  
+Latest public stable release: **0.1.1**  
+Planned next public release after validation: **0.1.2**
 
-> `0.1.1-build2` is an internal discovery-test build. The latest public stable
-> release remains `0.1.1`; the next public release will be `0.1.2` after this
-> discovery path is validated.
+> `0.1.1-build3` is intentionally an internal test build. Do not publish it as a
+> GitHub/HACS release. For validation, copy the integration manually into Home
+> Assistant. This avoids HACS version metadata becoming part of the discovery
+> test.
 
 The integration has been developed and directly validated with a **LAICA
 PS7002**. Compatibility with other LAICA/YoHealth models must be confirmed model
-by model; see [Device compatibility and protocol research](#device-compatibility-and-protocol-research).
+by model.
 
 ## Features
 
-The scale broadcasts measurements as non-connectable BLE advertisements. Home
-Assistant receives them locally; no cloud account, GATT connection, pairing, or
-LAICA app is required for normal operation.
+The scale broadcasts measurements over BLE. Home Assistant receives them
+locally; no cloud account, pairing, GATT connection, or LAICA app is required
+for normal operation.
 
 LAICA BLE:
 
 1. discovers compatible YoHealth advertisements;
-2. validates the protocol header, terminator and checksum;
+2. validates measurement framing, terminator and checksum;
 3. handles `0x80` as measurement-in-progress, deferred `0x82` as stable
    weight-only, and `0x86` as the complete/final measurement;
 4. decodes weight and, when available, impedance;
@@ -46,152 +49,147 @@ LAICA BLE:
 | Impedance | BLE frame | enabled, diagnostic entity |
 
 Body-composition entities are created after the first complete `0x86` frame with
-a usable impedance value. A stable `0x82` measurement is accepted as
-**weight-only** after a short hold-off. Likewise, if a final `0x86` frame has no
-usable impedance, only the weight is updated. Previous body-composition values
-are retained rather than being recalculated from an incomplete measurement.
+usable impedance. A stable `0x82` measurement is accepted as **weight-only**
+after a short hold-off. Likewise, if a final `0x86` frame has no usable
+impedance, only body weight is updated. Previous body-composition values are not
+recalculated from an incomplete measurement.
 
 Home Assistant controls the final ordering of entities on the device page. The
-integration creates Body weight first, but the frontend may still display it in
-a different position.
+integration creates Body weight first, but the frontend may display it elsewhere.
 
 ## Important limitation: one person per scale entry
 
 The scale does **not** transmit the identity of the person/profile. Person
-selection exists in the companion app, not in the scale BLE protocol.
+selection exists in the companion app, not in the BLE measurement protocol.
 
-For that reason, each configured LAICA BLE scale has one local calculation
-profile:
+Each configured scale therefore has one local calculation profile containing:
 
 - sex branch used by the historical LAICA/YoHealth algorithm;
 - date of birth;
 - height.
 
 Weight itself is valid for anybody using the scale, but calculated body
-composition belongs to the configured profile only.
-
-The profile values remain in the local Home Assistant config entry and are not
-sent anywhere by this integration.
+composition belongs to the configured profile only. These values remain local to
+Home Assistant.
 
 ## Measurement-state policy
 
-Direct PS7002 captures show:
+Direct PS7002 captures and real-world tests show:
 
 - `0x80`: measurement in progress;
 - `0x82`: stable weight;
 - `0x86`: complete/final body-composition result.
 
-Real-world testing with footwear confirmed that a valid stable weight can stop
-at `0x82` when electrode contact is unavailable.
+The integration holds the first stable `0x82` candidate for **2.5 seconds**. If
+`0x86` arrives during that window, the pending `0x82` is cancelled and only the
+complete measurement is published. If no `0x86` arrives, the stable weight is
+published once as a weight-only measurement. `0x80` never updates entities and
+re-arms the next weighing session.
 
-The integration therefore holds the first stable `0x82` candidate for **2.5
-seconds**. If `0x86` arrives during that window, the pending `0x82` is cancelled
-and only the complete measurement is published. If no `0x86` arrives, the
-stable `0x82` weight is published once as a weight-only measurement. `0x80`
-never updates entities and re-arms the next weighing session.
-
-Body-composition entities are never recalculated from `0x82`; they retain their
-last valid `0x86` values.
+This behavior has been directly tested both barefoot and while wearing slippers.
 
 ## Requirements
 
 - Home Assistant with Bluetooth support, or a working Bluetooth proxy;
 - the scale within BLE reception range of Home Assistant/a proxy;
-- for HACS installation, HACS already installed in Home Assistant. If needed, see
-  the official HACS documentation at https://hacs.xyz/.
+- HACS only if using the normal stable-release installation path.
 
 The integration is passive and does not connect to the scale.
 
-## Installation
+## Stable installation with HACS
 
-### HACS custom repository (recommended)
-
-This project is distributed as a **HACS custom integration repository**. It does
-not need to be present in the default HACS catalog.
-
-Repository URL:
+The public repository can be installed as a HACS custom integration:
 
 ```text
 https://github.com/piggei/home-assistant-laica-ble
 ```
 
-Installation procedure:
-
-1. Open **HACS** in Home Assistant and enter **Integrations**.
-2. Open the menu in the upper-right corner and choose **Custom repositories**.
-3. Add `https://github.com/piggei/home-assistant-laica-ble` and select
-   **Integration** as the category.
-4. Open **LAICA BLE** in HACS and choose **Download**.
-5. Select the latest stable release and complete the installation.
-6. Restart Home Assistant when requested.
-7. Start a weighing so the scale begins advertising over BLE.
-8. Open **Settings -> Devices & services**. Home Assistant should normally show
-   the discovered **LAICA BLE** scale automatically.
-9. Open the discovery card and enter the local profile values and the scale
-   model.
-
-If the automatic discovery card does not appear, choose **Add integration ->
-LAICA BLE**. In `0.1.1-build2` the fallback screen contains an explicit translated **Scale
-is active: search now** control. Start a weighing, enable that control and submit
-the form. Home Assistant first performs a one-shot scan, checks the shared BLE
-cache, then waits up to 15 seconds for a live compatible advertisement. This path
-does not require pairing or a connection to the scale.
+1. Open **HACS -> Integrations**.
+2. Open the upper-right menu and choose **Custom repositories**.
+3. Add the repository URL above and select **Integration**.
+4. Open **LAICA BLE** and choose **Download**.
+5. Install the latest stable release.
+6. Restart Home Assistant.
+7. Start a weighing so the scale begins advertising.
+8. Open **Settings -> Devices & services**. Home Assistant should normally offer
+   the discovered LAICA BLE device automatically.
+9. Open it and enter the local profile values and scale model.
 
 No YAML configuration is required.
 
-Project releases are published at:
+Public releases:
 
 https://github.com/piggei/home-assistant-laica-ble/releases
 
-### Manual installation
+## Internal build3 installation for validation
 
-1. Download the desired release archive from the repository Releases page.
-2. Copy the directory `custom_components/laica_ble` into the Home Assistant
-   configuration directory so the final path is:
+For `0.1.1-build3`, **do not use HACS**. Copy only:
 
-   ```text
-   /config/custom_components/laica_ble
-   ```
+```text
+custom_components/laica_ble
+```
 
-3. Restart Home Assistant.
-4. Make sure Home Assistant has a working Bluetooth adapter or Bluetooth proxy.
-5. Start a weighing so the scale begins advertising.
-6. Open **Settings -> Devices & services** and configure the automatically
-   discovered **LAICA BLE** device.
+to:
 
-If the device is not shown automatically, use **Add integration -> LAICA BLE**.
-The setup flow first checks Home Assistant's Bluetooth cache. If no compatible
-scale is present, it shows a visible search control. Start a weighing, select
-**Scale is active: search now**, and submit; the flow waits up to 15 seconds for
-a live advertisement.
+```text
+/config/custom_components/laica_ble
+```
 
+then restart Home Assistant. This test method deliberately keeps HACS out of the
+setup path.
 
-## Discovery, removal and reinstallation
+If a previous LAICA BLE config entry exists, remove that config entry first from
+**Settings -> Devices & services**. If HACS still has the public repository
+installed, it can remain installed while testing only if it does not overwrite
+the manually copied directory; otherwise remove the HACS download after the
+Home Assistant config entry/discovery flow has been cleared.
 
-LAICA/YoHealth scales advertise only while they are awake, so discovery depends
-on receiving a BLE advertisement during a weighing. Automatic Bluetooth discovery
-remains the normal setup path.
+## Discovery behavior
 
-The `0.1.1-build2` discovery path deliberately separates *device identification*
-from *measurement validation*. Setup identifies a candidate using only the
-YoHealth Company ID (`0xA102`) and header (`09 FF`). This is intentionally less
-strict than the runtime parser because the first packet observed while the scale
-wakes may be transient or incomplete. Actual measurements are still accepted only
-after the full protocol length, terminator and checksum checks succeed.
+LAICA/YoHealth scales advertise only while awake, so start a weighing when
+performing first setup.
 
-The lifecycle behavior is therefore:
+`0.1.1-build3` deliberately returns to the simple setup flow used by the last
+verified development build, with one important discovery correction learned from
+the diagnostic build:
 
-- automatic Bluetooth discovery can start from any advertisement carrying the
-  correct Company ID/header;
-- removing a config entry asks Home Assistant to rediscover the stored address;
-- **Add integration -> LAICA BLE** first checks the shared Bluetooth cache;
-- if nothing is cached, the explicit search action performs a one-shot scan and
-  then waits up to 15 seconds for a live compatible advertisement;
-- no pairing or connection to the scale is performed.
+- Home Assistant's manifest matcher recognizes Company ID `0xA102` and prefix
+  `09 FF`;
+- the config flow uses the same public Company ID/header signature to identify a
+  scale during discovery;
+- a complete checksum-valid measurement is **not** required merely to identify
+  the device, because the first packet seen while the scale wakes can be a
+  transient measurement frame;
+- actual measurements remain strictly validated by `protocol.py` before they can
+  update entities.
 
-If a scale is not found, start a weighing first and submit the search while the
-scale is awake. Bluetooth proxies can also provide the advertisement as long as
-Home Assistant receives it.
+### Automatic discovery
+
+This is the preferred path. Start a weighing and wait for Home Assistant to show
+LAICA BLE under **Settings -> Devices & services**. Opening the discovery card
+goes directly to the profile form.
+
+### Manual Add Integration fallback
+
+Start the weighing **before** opening:
+
+**Settings -> Devices & services -> Add integration -> LAICA BLE**
+
+The manual flow reads Home Assistant's shared Bluetooth cache:
+
+- if one compatible scale is present, it goes directly to the profile form;
+- if more than one is present, it shows a scale picker;
+- if none is present, it exits with a clear “no device found” message. Keep the
+  scale awake and try again.
+
+There is intentionally **no custom 15-second scanner, no `scan_now` field, and no
+pairing/connect operation** in build3.
+
+### Removal and rediscovery
+
+When a configured LAICA BLE entry is removed, the integration asks Home
+Assistant to make its Bluetooth address eligible for rediscovery. Start another
+weighing afterwards to trigger a fresh discovery.
 
 ## Configuration and profile changes
 
@@ -205,9 +203,8 @@ You can change:
 - height;
 - scale model.
 
-The date of birth accepts `DD/MM/YYYY` or `YYYY-MM-DD` and is stored internally
-in ISO format. The integration reloads automatically. Age is recalculated from
-the date of birth at measurement time.
+Date of birth accepts `DD/MM/YYYY` or `YYYY-MM-DD` and is stored internally in
+ISO format. Age is recalculated at measurement time.
 
 ## Protocol at a glance
 
@@ -225,50 +222,41 @@ payload:
 - `CC`: checksum;
 - `AA`: terminator.
 
-See [docs/PROTOCOL.md](docs/PROTOCOL.md) for the BLE framing and
-[docs/ALGORITHM.md](docs/ALGORITHM.md) for the recovered body-composition
-calculation.
+See [docs/PROTOCOL.md](docs/PROTOCOL.md) and
+[docs/ALGORITHM.md](docs/ALGORITHM.md).
 
 ## Compatibility
 
 | Model | Protocol evidence | Algorithm evidence | Status |
 |---|---|---|---|
 | LAICA PS7002 | direct captures | direct comparison with app | **validated** |
-| LAICA PS7200L | historical YoHealth evidence | historical implementation source | strong evidence; new Home Assistant validation wanted |
+| LAICA PS7200L | historical YoHealth evidence | historical implementation source | strong evidence; HA validation wanted |
 | Other LAICA/YoHealth models | unknown | unknown | reports wanted |
 
 The PS7002 is the only model directly validated with this Home Assistant
-integration through stable release `0.1.1`; `0.1.1-build2` changes only setup discovery and diagnostics. Do not assume compatibility solely from the LAICA
-brand or product appearance.
+integration. Do not infer compatibility solely from the LAICA brand or product
+appearance.
 
 ## Support and issue routing
 
-For **Home Assistant integration problems**—installation, discovery after a
-known-compatible advertisement, entity behavior, configuration, diagnostics, or
-integration exceptions—open an issue here:
+For **Home Assistant integration problems**—installation, discovery, entity
+behavior, configuration, diagnostics, or integration exceptions—use:
 
 https://github.com/piggei/home-assistant-laica-ble/issues
 
-For **scale/protocol research**—support for a new LAICA model, BLE captures,
-unknown packet formats/status values, compatibility reports, or validation of
-body-composition results—use the dedicated technical repository:
+For **scale/protocol research**—additional LAICA models, BLE captures, unknown
+packet formats/status values, compatibility reports, or measurement-validation
+work—use:
 
 https://github.com/piggei/laica-ps7002-ble-research
 
-This separation keeps Home Assistant software bugs distinct from reverse-
-engineering and hardware-compatibility work.
-
-## Diagnostics
+## Diagnostics and debug logging
 
 Home Assistant diagnostics are available from the LAICA BLE integration/device
-menu. The exported diagnostics intentionally redact the Bluetooth address and
-profile fields (birth date, height and sex branch), and do not include weight,
-impedance values, or raw BLE payloads. They contain only protocol state useful
-for debugging.
+menu. They redact the Bluetooth address and profile fields and do not include
+weight, impedance, or raw BLE payloads.
 
-## Debug logging
-
-For troubleshooting, temporarily add:
+For troubleshooting, temporarily enable:
 
 ```yaml
 logger:
@@ -276,40 +264,39 @@ logger:
     custom_components.laica_ble: debug
 ```
 
-After installing a development build, restart Home Assistant and refresh the
-browser UI. If a config-flow label still appears as a raw key such as
-`scan_now`, force-refresh the browser (`Ctrl+F5` on Windows/Linux). Custom
-integration runtime strings are supplied directly from
-`custom_components/laica_ble/translations/`; this build intentionally does not
-ship a Core-only `strings.json` file.
+Build3 logs only meaningful config-flow transitions. It does not dump every BLE
+advertisement and does not log weight, impedance, full manufacturer payloads, or
+profile data.
 
-For `0.1.1-build2`, the 15-second manual search logs every non-connectable BLE
-advertisement at DEBUG. YoHealth-like candidates and the scan summary are also
-reported at INFO, so useful evidence remains visible even without DEBUG logging.
-The logged metadata includes the BLE device name/address, manufacturer company
-IDs, payload lengths and only the first two payload bytes. The remainder of the manufacturer payload is deliberately omitted
-so weight and impedance data are not written to the discovery log. The integration
-does not log the configured date of birth or other profile details.
+Runtime translation files are stored only in:
+
+```text
+custom_components/laica_ble/translations/
+```
+
+The package intentionally does not ship `strings.json`, which is a Home
+Assistant Core build-time mechanism rather than the runtime source for custom
+integrations.
 
 ## Validation
 
-The repository includes regression tests for:
+The repository contains regression tests for:
 
 - YoHealth frame parsing and checksum validation;
 - complete `0x86` measurements;
 - deferred `0x82` weight-only measurements and cancellation by `0x86`;
 - duplicate/session handling;
+- discovery signature versus strict measurement validation;
 - profile date parsing and age rollover;
-- recovered YoHealth body-composition calculations.
+- recovered YoHealth body-composition calculations;
+- custom-integration translation packaging.
 
 GitHub Actions run Ruff, pytest, the standalone self-test, Python compilation,
-JSON validation, Home Assistant `hassfest`, and HACS repository validation on
+JSON validation, Home Assistant `hassfest`, and HACS validation on repository
 pushes and pull requests.
 
-Build `0.1.1-build2` preserves the validated measurement parser, `0x80` / `0x82` /
-`0x86` state behavior and recovered YoHealth formulas. It changes only the
-identification/waiting path used during setup, fixes custom-integration runtime
-translations, and expands discovery diagnostics.
+`0.1.1-build3` does **not** modify measurement parsing, the `0x80` / `0x82` /
+`0x86` session policy, sensors, or the recovered YoHealth formulas.
 
 ## Safety / interpretation
 
@@ -321,7 +308,7 @@ is not intended for diagnosis or medical decision-making.
 
 Project code and original documentation are released under the **MIT License**.
 No proprietary LAICA/YoHealth library, APK, firmware, or decompiled proprietary
-source is distributed in this repository. See [NOTICE.md](NOTICE.md).
+source is distributed. See [NOTICE.md](NOTICE.md).
 
 This is an independent interoperability project and is not affiliated with or
 endorsed by LAICA.
