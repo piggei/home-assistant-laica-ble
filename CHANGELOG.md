@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0 - 2026-09-19
+
+First stable release of the LAICA BLE Home Assistant integration.
+
+- Promoted the validated `0.1.0-dev.8` behavior to stable without changing the BLE parser or recovered YoHealth formulas.
+- Supports automatic passive BLE discovery of validated YoHealth advertisements.
+- Supports complete `0x86` body-composition measurements and deferred `0x82` weight-only measurements.
+- Keeps body-composition values unchanged when a weighing has no usable impedance.
+- Includes editable local profile data, English/Italian translations, privacy-safe diagnostics, and HACS/manual installation.
+- Documents the one-person-per-scale-entry limitation and the distinction between Home Assistant integration issues and scale/protocol research.
+- Final documentation audit updated installation instructions, protocol-state documentation, support links, and release references.
+- CI baseline: pytest, Ruff, Python compilation, JSON validation, Home Assistant `hassfest`, and HACS validation.
+
 ## 0.1.0-dev.8 - 2026-09-19
 
 Weight-only measurement support based on direct PS7002 footwear testing.
@@ -23,7 +36,7 @@ CI/quality cleanup release following the first full validation run.
 - Reordered `manifest.json` keys to satisfy Home Assistant `hassfest`.
 - No BLE protocol, entity behavior, final-frame policy, profile handling, or YoHealth formula changes.
 
-## 0.1.0-dev.6
+## 0.1.0-dev.6 - 2026-09-19
 
 Consolidation release before `0.1.0`.
 
@@ -42,7 +55,7 @@ Consolidation release before `0.1.0`.
 - Disable Body age by default; users can enable it from the entity registry if desired.
 - No BLE protocol or YoHealth calculation changes.
 
-## 0.1.0-dev.4
+## 0.1.0-dev.4 - 2026-09-19
 
 - Fixed Home Assistant entity translations to use the current `entity.sensor` schema.
 - Renamed the main scale measurement from generic `Weight` to `Body weight` (`Peso corporeo`).

@@ -1,129 +1,172 @@
 # LAICA BLE for Home Assistant
 
-Experimental local Bluetooth integration for LAICA smart body-composition scales
-using the **YoHealth** advertising protocol.
+Local Bluetooth integration for LAICA smart body-composition scales using the
+**YoHealth** advertising protocol.
 
-Current release: **0.1.0-dev.8**
+Current release: **0.1.0**
 
-The integration was developed and directly validated with a **LAICA PS7002**.
-Compatibility with other LAICA/YoHealth models is an explicit research goal, but
-must be confirmed model by model.
+The integration has been developed and directly validated with a **LAICA
+PS7002**. Compatibility with other LAICA/YoHealth models must be confirmed model
+by model; see [Device compatibility and protocol research](#device-compatibility-and-protocol-research).
 
-## What it does
+## Features
 
 The scale broadcasts measurements as non-connectable BLE advertisements. Home
-Assistant receives the advertisements locally; no cloud account, GATT connection,
-or LAICA app is required for normal operation.
+Assistant receives them locally; no cloud account, GATT connection, pairing, or
+LAICA app is required for normal operation.
 
-The integration:
+LAICA BLE:
 
 1. discovers compatible YoHealth advertisements;
 2. validates the protocol header, terminator and checksum;
-3. accepts complete status `0x86`, or a deferred stable `0x82` as weight-only;
-4. decodes weight and, for complete measurements, impedance;
+3. handles `0x80` as measurement-in-progress, deferred `0x82` as stable
+   weight-only, and `0x86` as the complete/final measurement;
+4. decodes weight and, when available, impedance;
 5. calculates the recovered YoHealth body-composition fields locally from the
    configured profile;
 6. retains the last measurement while the scale is sleeping/offline.
 
 ### Entities
 
-| Sensor | Source |
-|---|---|
-| Weight | BLE frame |
-| Impedance | BLE frame |
-| BMI | recovered YoHealth algorithm |
-| Body fat | recovered YoHealth algorithm |
-| Body water | recovered YoHealth algorithm |
-| Muscle | recovered YoHealth algorithm |
-| Bone mass | recovered YoHealth algorithm |
-| Visceral fat | recovered YoHealth algorithm |
-| Body age | recovered YoHealth algorithm |
-| Basal metabolic rate | recovered YoHealth algorithm |
+| Sensor | Source | Default presentation |
+|---|---|---|
+| Body weight | BLE frame | enabled |
+| BMI | recovered YoHealth algorithm | enabled |
+| Body fat | recovered YoHealth algorithm | enabled |
+| Body water | recovered YoHealth algorithm | enabled |
+| Muscle mass | recovered YoHealth algorithm | enabled |
+| Bone mass | recovered YoHealth algorithm | enabled |
+| Visceral fat | recovered YoHealth algorithm | enabled |
+| Basal metabolic rate | recovered YoHealth algorithm | enabled |
+| Body age | recovered YoHealth algorithm | disabled by default |
+| Impedance | BLE frame | enabled, diagnostic entity |
 
-Body-composition sensors are created after the first final `0x86` frame containing
-a valid impedance value. A stable `0x82` measurement is accepted as weight-only
-after a short hold-off. Likewise, if a final `0x86` frame has no usable impedance,
-only weight is updated. Previous body-composition values are retained.
+Body-composition entities are created after the first complete `0x86` frame with
+a usable impedance value. A stable `0x82` measurement is accepted as
+**weight-only** after a short hold-off. Likewise, if a final `0x86` frame has no
+usable impedance, only the weight is updated. Previous body-composition values
+are retained rather than being recalculated from an incomplete measurement.
 
-## Important architectural limitation: one person per scale entry
+Home Assistant controls the final ordering of entities on the device page. The
+integration creates Body weight first, but the frontend may still display it in
+a different position.
+
+## Important limitation: one person per scale entry
 
 The scale does **not** transmit the identity of the person/profile. Person
 selection exists in the companion app, not in the scale BLE protocol.
 
-For that reason a configured LAICA BLE scale has one local calculation profile:
+For that reason, each configured LAICA BLE scale has one local calculation
+profile:
 
-- sex used by the historical LAICA/YoHealth algorithm;
+- sex branch used by the historical LAICA/YoHealth algorithm;
 - date of birth;
 - height.
 
 Weight itself is valid for anybody using the scale, but calculated body
 composition belongs to the configured profile only.
 
-The date of birth and profile values stay in the local Home Assistant config
-entry and are not sent anywhere by this integration.
+The profile values remain in the local Home Assistant config entry and are not
+sent anywhere by this integration.
 
 ## Measurement-state policy
 
-PS7002 captures show `0x80` while measurement is in progress, `0x82` when the
-weight is stable, and `0x86` for a complete body-composition result. Real-world
-testing with footwear confirmed that a valid stable weight can stop at `0x82`
-when electrode contact is unavailable.
+Direct PS7002 captures show:
+
+- `0x80`: measurement in progress;
+- `0x82`: stable weight;
+- `0x86`: complete/final body-composition result.
+
+Real-world testing with footwear confirmed that a valid stable weight can stop
+at `0x82` when electrode contact is unavailable.
 
 The integration therefore holds the first stable `0x82` candidate for **2.5
 seconds**. If `0x86` arrives during that window, the pending `0x82` is cancelled
-and only the complete measurement is published. If no `0x86` arrives, the stable
-`0x82` weight is published once as a weight-only measurement. `0x80` never updates
-entities and re-arms the next weighing session.
+and only the complete measurement is published. If no `0x86` arrives, the
+stable `0x82` weight is published once as a weight-only measurement. `0x80`
+never updates entities and re-arms the next weighing session.
 
-Body-composition entities are never recalculated from `0x82`; they keep their
+Body-composition entities are never recalculated from `0x82`; they retain their
 last valid `0x86` values.
+
+## Requirements
+
+- Home Assistant with Bluetooth support, or a working Bluetooth proxy;
+- the scale within BLE reception range of Home Assistant/a proxy;
+- for HACS installation, HACS already installed in Home Assistant. If needed, see
+  the official HACS documentation at https://hacs.xyz/.
+
+The integration is passive and does not connect to the scale.
 
 ## Installation
 
-### HACS (recommended for development installs)
+### HACS custom repository (recommended)
 
-The repository is structured as a HACS custom integration. To install it from
-GitHub without copying files manually:
+This project is distributed as a **HACS custom integration repository**. It does
+not need to be present in the default HACS catalog.
 
-1. Open **HACS** in Home Assistant.
-2. Open the menu in the top-right corner and choose **Custom repositories**.
-3. Enter this repository URL and select **Integration** as the category.
-4. Add the repository, open **LAICA BLE**, and choose **Download**.
-5. Restart Home Assistant when HACS requests it.
-6. Start a weighing so that the scale advertises over BLE.
-7. Go to **Settings -> Devices & services**. When the scale advertises, Home Assistant
-   should automatically show the discovered **LAICA BLE** device.
-8. Open the discovery card and enter the local profile values and scale model.
+Repository URL:
 
-The repository contains `hacs.json` and the HACS brand assets required for a
-custom integration repository. If no GitHub Release exists yet, HACS can install
-the current default branch. Once releases are published, HACS can offer those
-versions explicitly.
+```text
+https://github.com/piggei/home-assistant-laica-ble
+```
 
-### Manual
+Installation procedure:
 
-1. Copy `custom_components/laica_ble` into your Home Assistant configuration:
+1. Open **HACS** in Home Assistant and enter **Integrations**.
+2. Open the menu in the upper-right corner and choose **Custom repositories**.
+3. Add `https://github.com/piggei/home-assistant-laica-ble` and select
+   **Integration** as the category.
+4. Open **LAICA BLE** in HACS and choose **Download**.
+5. Select the latest stable release and complete the installation.
+6. Restart Home Assistant when requested.
+7. Start a weighing so the scale begins advertising over BLE.
+8. Open **Settings -> Devices & services**. Home Assistant should show the
+   discovered **LAICA BLE** scale.
+9. Open the discovery card and enter the local profile values and the scale
+   model.
+
+No YAML configuration is required.
+
+Project releases are published at:
+
+https://github.com/piggei/home-assistant-laica-ble/releases
+
+### Manual installation
+
+1. Download the desired release archive from the repository Releases page.
+2. Copy the directory `custom_components/laica_ble` into the Home Assistant
+   configuration directory so the final path is:
 
    ```text
    /config/custom_components/laica_ble
    ```
 
-2. Restart Home Assistant.
-3. Make sure Home Assistant has a working Bluetooth adapter or Bluetooth proxy.
-4. Start a weighing so the scale begins advertising.
-5. When the scale advertises, Home Assistant should automatically discover
-   **LAICA BLE** under **Settings -> Devices & services**.
-6. Open the discovery card and enter the local profile values and scale model.
+3. Restart Home Assistant.
+4. Make sure Home Assistant has a working Bluetooth adapter or Bluetooth proxy.
+5. Start a weighing so the scale begins advertising.
+6. Open **Settings -> Devices & services** and configure the automatically
+   discovered **LAICA BLE** device.
 
-No YAML configuration is required.
+If the device is not shown automatically, keep the scale awake/advertising and
+use **Add integration -> LAICA BLE** to select a currently advertising compatible
+scale.
 
-## Profile changes
+## Configuration and profile changes
 
-Use **Settings -> Devices & services -> LAICA BLE -> Configure** to update date
-of birth, height, sex branch or model. The date of birth can be typed as
-`DD/MM/YYYY` or `YYYY-MM-DD`; it is stored internally in ISO format. The integration
-reloads automatically, and age is calculated from the date of birth at measurement
-time.
+Use **Settings -> Devices & services -> LAICA BLE -> Configure** to update the
+profile without removing the integration.
+
+You can change:
+
+- sex branch;
+- date of birth;
+- height;
+- scale model.
+
+The date of birth accepts `DD/MM/YYYY` or `YYYY-MM-DD` and is stored internally
+in ISO format. The integration reloads automatically. Age is recalculated from
+the date of birth at measurement time.
 
 ## Protocol at a glance
 
@@ -136,61 +179,53 @@ payload:
 
 - `WW WW`: weight raw, big-endian;
 - `ZZ ZZ`: health/impedance raw, big-endian (`FFFF` = unavailable);
-- `SS`: status (`86` = accepted final status in this release);
+- `SS`: status (`80` = in progress, `82` = stable weight, `86` = complete);
 - `MM`: mode/precision (`21` on the validated PS7002);
 - `CC`: checksum;
 - `AA`: terminator.
 
-See [docs/PROTOCOL.md](docs/PROTOCOL.md) and
-[docs/ALGORITHM.md](docs/ALGORITHM.md).
+See [docs/PROTOCOL.md](docs/PROTOCOL.md) for the BLE framing and
+[docs/ALGORITHM.md](docs/ALGORITHM.md) for the recovered body-composition
+calculation.
 
-## Compatibility status
+## Compatibility
 
-| Model | Protocol | Algorithm | Status |
+| Model | Protocol evidence | Algorithm evidence | Status |
 |---|---|---|---|
-| LAICA PS7002 | directly captured | directly compared with app | **validated** |
-| LAICA PS7200L | historical YoHealth evidence | historical implementation source | strong evidence, needs new HA test |
-| Other LAICA models | unknown | unknown | reports wanted |
+| LAICA PS7002 | direct captures | direct comparison with app | **validated** |
+| LAICA PS7200L | historical YoHealth evidence | historical implementation source | strong evidence; new Home Assistant validation wanted |
+| Other LAICA/YoHealth models | unknown | unknown | reports wanted |
 
-For support of additional LAICA/YoHealth devices, protocol captures, algorithm
-validation, and compatibility reports, use the dedicated research repository:
+The PS7002 is the only model directly validated with this Home Assistant
+integration at release `0.1.0`. Do not assume compatibility solely from the LAICA
+brand or product appearance.
+
+## Support and issue routing
+
+For **Home Assistant integration problems**—installation, discovery after a
+known-compatible advertisement, entity behavior, configuration, diagnostics, or
+integration exceptions—open an issue here:
+
+https://github.com/piggei/home-assistant-laica-ble/issues
+
+For **scale/protocol research**—support for a new LAICA model, BLE captures,
+unknown packet formats/status values, compatibility reports, or validation of
+body-composition results—use the dedicated technical repository:
 
 https://github.com/piggei/laica-ps7002-ble-research
 
-Issues in this repository should focus on the Home Assistant integration itself.
-
+This separation keeps Home Assistant software bugs distinct from reverse-
+engineering and hardware-compatibility work.
 
 ## Diagnostics
 
-Home Assistant diagnostics are available from the LAICA BLE integration/device menu.
-The exported diagnostics intentionally redact the Bluetooth address and all profile
-fields (birth date, height and sex branch), and do not include weight, impedance
-values or raw BLE payloads. They contain only protocol state useful for debugging.
+Home Assistant diagnostics are available from the LAICA BLE integration/device
+menu. The exported diagnostics intentionally redact the Bluetooth address and
+profile fields (birth date, height and sex branch), and do not include weight,
+impedance values, or raw BLE payloads. They contain only protocol state useful
+for debugging.
 
-## Automated validation
-
-The repository includes `pytest` regression tests for the YoHealth parser, final-frame
-gate, profile date parsing and recovered body-composition algorithm. GitHub Actions
-also run Ruff, the legacy self-test, Python compilation, JSON validation, Home
-Assistant `hassfest`, and HACS repository validation on pushes and pull requests.
-
-## Safety / interpretation
-
-Body-composition values from consumer BIA scales are estimates. This project
-reproduces the historical vendor algorithm for interoperability and research; it
-is not intended for diagnosis or medical decision-making.
-
-## Development status
-
-This consolidation build keeps the validated BLE/parser/algorithm behavior unchanged and adds diagnostics, regression tests and repository validation before the first stable `0.1.0` release. Automatic discovery, profile editing and real PS7002 measurements have been verified in Home Assistant.
-
-## License and provenance
-
-Project code and original documentation are released under the **MIT License**.
-No proprietary LAICA/YoHealth library, APK, or decompiled source is distributed
-in this repository. See [NOTICE.md](NOTICE.md).
-
-### Debug logging
+## Debug logging
 
 For troubleshooting, temporarily add:
 
@@ -200,10 +235,38 @@ logger:
     custom_components.laica_ble: debug
 ```
 
-The integration logs accepted final frame metadata, not the configured date of
+The integration logs accepted measurement metadata, not the configured date of
 birth or other profile details.
 
+## Validation
 
-## Entity presentation
+The repository includes regression tests for:
 
-**Body weight** is treated as the primary measurement and is created first. Impedance is enabled as a diagnostic entity. Body age is disabled by default and can be enabled from the entity registry. Home Assistant controls the final order shown on the device page.
+- YoHealth frame parsing and checksum validation;
+- complete `0x86` measurements;
+- deferred `0x82` weight-only measurements and cancellation by `0x86`;
+- duplicate/session handling;
+- profile date parsing and age rollover;
+- recovered YoHealth body-composition calculations.
+
+GitHub Actions run Ruff, pytest, the standalone self-test, Python compilation,
+JSON validation, Home Assistant `hassfest`, and HACS repository validation on
+pushes and pull requests.
+
+The final `0.1.0` release preserves the validated BLE protocol behavior and
+recovered YoHealth formulas used during development.
+
+## Safety / interpretation
+
+Body-composition values from consumer BIA scales are estimates. This project
+reproduces the historical vendor algorithm for interoperability and research; it
+is not intended for diagnosis or medical decision-making.
+
+## License and provenance
+
+Project code and original documentation are released under the **MIT License**.
+No proprietary LAICA/YoHealth library, APK, firmware, or decompiled proprietary
+source is distributed in this repository. See [NOTICE.md](NOTICE.md).
+
+This is an independent interoperability project and is not affiliated with or
+endorsed by LAICA.

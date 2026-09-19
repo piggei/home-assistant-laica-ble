@@ -2,8 +2,8 @@
 
 ## Evidence status
 
-The byte layout below was recovered from real PS7002 BLE captures and cross-
-checked against historical YoHealth/PS7200L reverse-engineering material.
+The byte layout below was recovered from real PS7002 BLE captures and
+cross-checked against historical YoHealth/PS7200L reverse-engineering material.
 
 The Home Assistant integration uses only fields needed for deterministic local
 operation and validates every accepted frame checksum.
@@ -58,12 +58,12 @@ Validated PS7002 mode byte is `0x21` and weight is raw/10:
 
 Historical application logic treated the mode byte as BCD-like:
 
-- 11..19: weight-only family;
-- 21..29: body-composition family;
-- units digit 1: divide weight raw by 10;
-- units digit 2: divide weight raw by 100.
+- `11..19`: weight-only family;
+- `21..29`: body-composition family;
+- units digit `1`: divide weight raw by 10;
+- units digit `2`: divide weight raw by 100.
 
-The integration supports precision digits 1 and 2, with /10 as conservative
+The integration supports precision digits 1 and 2, with `/10` as a conservative
 fallback for an unknown mode.
 
 ### Impedance / health
@@ -72,23 +72,37 @@ fallback for an unknown mode.
 02 99 = 0x0299 = 665
 ```
 
-`FFFF` is observed before a valid body-composition measurement and is treated as
-unavailable. `0000` is also rejected as unavailable.
+`FFFF` is observed when a usable body-composition measurement is unavailable and
+is treated as missing impedance. `0000` is also rejected as unavailable.
 
-### Status
+### Status and publication policy
 
 Observed PS7002 transitions include:
 
-- `0x80`: realtime/in-progress;
-- `0x82`: stable weight/no-body-composition candidate;
-- `0x86`: final body-composition result.
+- `0x80`: realtime / measurement in progress;
+- `0x82`: stable weight;
+- `0x86`: complete/final body-composition result.
 
-For v0.1.x, Home Assistant publishes **only `0x86`**. `0x80` and `0x82` are used
-only to re-arm duplicate suppression for the next weighing.
+Direct footwear testing showed that a valid weighing can end at `0x82` when the
+user is not making electrical contact with the electrodes. Release `0.1.0`
+therefore uses this policy:
 
-If future captures show `0x86` with `FFFF` impedance (for example socks/no
-contact), the current implementation safely publishes only the final weight.
-If the scale instead stops at `0x82`, no entity is updated in v0.1.x by design.
+1. `0x80` never updates entities and re-arms a new weighing session.
+2. The first `0x82` is retained as a stable weight-only candidate for 2.5
+   seconds. Repeated `0x82` advertisements update the candidate frame but do not
+   restart the timer indefinitely.
+3. If `0x86` arrives during the hold-off, the pending `0x82` is cancelled and
+   only `0x86` is published.
+4. If no `0x86` arrives, the pending `0x82` is published once as weight-only.
+5. A valid `0x86` is published immediately. If its impedance field is unavailable,
+   only weight is updated.
+6. Body-composition values are calculated only from `0x86` with usable
+   impedance; incomplete measurements never overwrite the previous BIA-derived
+   values.
+
+This gives one normal complete update for barefoot measurements while still
+supporting weight-only measurements with footwear or unavailable electrode
+contact.
 
 ## Checksum
 
@@ -113,12 +127,27 @@ Reference frame:
 
 produces checksum `0x15`.
 
-## Duplicate handling
+## Session and duplicate handling
 
-A final frame is broadcast repeatedly for several seconds. The integration emits
-one logical measurement per session:
+The scale repeats advertisements during a weighing. The integration combines two
+small session gates:
 
-1. first valid `0x86` -> accepted;
-2. repeated `0x86` -> ignored;
-3. any valid non-`0x86` frame -> re-arm;
-4. a 30-second timeout also re-arms if transition advertisements were missed.
+- the final-frame gate suppresses repeated `0x86` advertisements and has a
+  30-second safety re-arm timeout if transition frames are missed;
+- the stable-weight gate schedules at most one deferred `0x82` weight-only
+  publication per weighing session and is re-armed by the next `0x80`.
+
+A complete `0x86` always cancels a pending stable-weight timer, so the normal
+`0x80 -> 0x82 -> 0x86` sequence produces a single complete measurement rather
+than a weight-only update followed by a second full update.
+
+## Scope
+
+The protocol behavior above is directly validated on LAICA PS7002. Historical
+YoHealth material provides evidence for related devices, but additional models
+must be validated individually before they are claimed as supported.
+
+Compatibility work, new captures, and protocol questions belong in the technical
+research repository:
+
+https://github.com/piggei/laica-ps7002-ble-research
